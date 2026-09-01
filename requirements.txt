@@ -1,0 +1,40 @@
+# Core dependencies
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.2
+python-dotenv==1.0.0
+
+# Data processing
+pandas==2.1.4
+numpy==1.26.2
+scikit-learn==1.3.2
+
+# Machine learning
+lightgbm==4.2.0
+joblib==1.3.2
+
+# LLM integration
+openai==1.6.1
+anthropic==0.8.0
+langchain==0.0.350
+
+# Razorpay integration
+razorpay==1.4.2
+
+# Database and storage
+sqlalchemy==2.0.23
+aiosqlite==0.19.0
+
+# Monitoring and visualization
+prometheus-client==0.19.0
+plotly==5.18.0
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.23.2
+faker==21.0.0
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+httpx==0.25.2
