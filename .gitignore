@@ -1,0 +1,40 @@
+# Environment variables (API keys - NEVER commit this)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# ML models (generated)
+models/saved_models/
+
+# Data (generated)
+data/synthetic/
+
+# Test cache
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
