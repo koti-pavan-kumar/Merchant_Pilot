@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 import uvicorn
 import os
+import json
 from pathlib import Path
 from datetime import datetime
 
@@ -11,7 +12,10 @@ from api.health import router as health_router
 from api.actions import router as actions_router
 from services.razorpay_client import RazorpayClient
 from services.audit_trail import AuditTrail
+from services.webhook_handler import WebhookHandler
+import logging
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 
 app = FastAPI(
@@ -42,6 +46,72 @@ async def root():
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard():
     return _serve_dashboard()
+
+
+@app.post("/webhook/razorpay")
+async def razorpay_webhook(request: Request):
+    """
+    Razorpay webhook endpoint.
+    Receives payment events and triggers automated recovery actions.
+    
+    Configure this URL in your Razorpay dashboard:
+    Settings > Webhooks > Add Webhook
+    URL: https://your-domain.com/webhook/razorpay
+    Events: payment.authorized, payment.captured, payment.failed, 
+            payment.refunded, payment.dispute.created, order.paid, order.expired
+    """
+    try:
+        # Get raw body for signature verification
+        body = await request.body()
+        payload = json.loads(body)
+        
+        # Get event type from header or payload
+        event_type = request.headers.get("X-Razorpay-Event", payload.get("event", "unknown"))
+        
+        # Get signature for verification
+        signature = request.headers.get("X-Razorpay-Signature", "")
+        
+        # Initialize handler and process
+        handler = WebhookHandler()
+        
+        # Verify signature (skip in simulation mode)
+        if not handler.razorpay.simulation_mode and signature:
+            if not handler.verify_signature(body, signature):
+                return JSONResponse(
+                    status_code=401,
+                    content={"error": "Invalid signature"}
+                )
+        
+        # Process the event
+        result = handler.handle_event(event_type, payload)
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "received",
+                "event_type": event_type,
+                "result": result,
+            }
+        )
+        
+    except json.JSONDecodeError:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Invalid JSON"}
+        )
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
+        )
+
+
+@app.get("/webhook/events")
+async def get_webhook_events():
+    """Get recent webhook events for debugging."""
+    handler = WebhookHandler()
+    return handler.get_event_stats()
 
 
 @app.get("/health")
