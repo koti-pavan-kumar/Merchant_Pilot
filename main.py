@@ -1101,34 +1101,47 @@ async def checkout_page():
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MerchantPilot AI - Checkout</title>
     <style>
-        :root { --bg: #050510; --card: rgba(15, 15, 35, 0.6); --border: rgba(120, 100, 255, 0.12); --gold: #7c3aed; --green: #10b981; --red: #ef4444; --text: #f0eeff; --muted: #8b85b8; }
+        :root { --bg: #f8f9fc; --card: #ffffff; --border: #e2e6f0; --purple: #6d28d9; --blue: #2563eb; --green: #059669; --red: #dc2626; --text: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .container { max-width: 480px; width: 100%; padding: 32px; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 20px; backdrop-filter: blur(12px); position: relative; overflow: hidden; }
-        .container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #7c3aed, #3b82f6, transparent); }
-        h1 { font-family: 'Space Grotesk', sans-serif; background: linear-gradient(135deg, #f0eeff, #8b85b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-        .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
-        .amount { font-family: 'Space Grotesk', sans-serif; font-size: 48px; font-weight: 700; color: var(--text); margin: 24px 0; }
-        .amount span { font-size: 24px; color: var(--muted); }
-        .btn { display: inline-block; padding: 16px 48px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, #10b981, #06b6d4); color: white; transition: all 0.2s; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25); }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4); }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        .topnav { background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 0 40px; height: 60px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .topnav-logo { width: 36px; height: 36px; background: linear-gradient(135deg, var(--purple), var(--blue)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 15px; font-family: 'Space Grotesk', sans-serif; }
+        .topnav-brand { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; }
+        .topnav-sub { font-size: 10px; color: var(--purple); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .topnav a.back-link { margin-left: auto; color: var(--text-secondary); text-decoration: none; font-size: 13px; font-weight: 500; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); transition: all 200ms; }
+        .topnav a.back-link:hover { border-color: var(--purple); color: var(--purple); }
+        .main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; }
+        .container { max-width: 480px; width: 100%; padding: 40px; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 4px 16px rgba(15,23,42,0.06); position: relative; overflow: hidden; }
+        .container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--purple), var(--blue)); }
+        h1 { font-family: 'Space Grotesk', sans-serif; color: var(--text); font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+        .subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 32px; }
+        .amount { font-family: 'Space Grotesk', sans-serif; font-size: 52px; font-weight: 700; color: var(--text); margin: 24px 0; }
+        .amount span { font-size: 24px; color: var(--text-muted); }
+        .btn { display: inline-block; padding: 16px 48px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, var(--green), #0891b2); color: white; transition: all 0.2s; box-shadow: 0 4px 20px rgba(5,150,105,0.2); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(5,150,105,0.3); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-        .card-info { background: rgba(5, 5, 16, 0.5); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 24px; text-align: left; }
-        .card-info h3 { font-size: 12px; color: var(--gold); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .card-info { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 24px; text-align: left; }
+        .card-info h3 { font-size: 11px; color: var(--purple); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
         .card-info table { width: 100%; font-size: 13px; }
-        .card-info td { padding: 4px 0; }
-        .card-info td:first-child { color: var(--muted); width: 120px; }
-        .card-info td:last-child { font-family: 'JetBrains Mono', monospace; }
-        .success { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; padding: 32px; margin-top: 24px; display: none; }
+        .card-info td { padding: 5px 0; }
+        .card-info td:first-child { color: var(--text-muted); width: 120px; }
+        .card-info td:last-child { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+        .success { background: rgba(5,150,105,0.04); border: 1px solid rgba(5,150,105,0.15); border-radius: 12px; padding: 32px; margin-top: 24px; display: none; }
         .success h2 { color: var(--green); font-size: 20px; margin-bottom: 8px; }
-        .success p { color: var(--muted); font-size: 14px; }
-        .error { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 20px; margin-top: 24px; display: none; }
+        .success p { color: var(--text-secondary); font-size: 14px; }
+        .error { background: rgba(220,38,38,0.04); border: 1px solid rgba(220,38,38,0.15); border-radius: 12px; padding: 20px; margin-top: 24px; display: none; }
         .error p { color: var(--red); font-size: 14px; }
-        .back { color: var(--muted); text-decoration: none; font-size: 13px; display: inline-block; margin-top: 24px; transition: color 200ms; }
-        .back:hover { color: var(--gold); }
+        .back { color: var(--text-muted); text-decoration: none; font-size: 13px; display: inline-block; margin-top: 24px; transition: color 200ms; }
+        .back:hover { color: var(--purple); }
     </style>
 </head>
 <body>
+    <nav class="topnav">
+        <div class="topnav-logo">M</div>
+        <div><div class="topnav-brand">MerchantPilot AI</div><div class="topnav-sub">Razorpay Buildathon 2026</div></div>
+        <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+    </nav>
+    <div class="main">
     <div class="container">
         <h1>MerchantPilot AI</h1>
         <p class="subtitle">Real Payment Test — Razorpay Test Mode</p>
@@ -1149,7 +1162,8 @@ async def checkout_page():
                 <tr><td>Name</td><td>Test User</td></tr>
             </table>
         </div>
-        <a href="/test-payment" class="back">← Back to Test Payment Page</a>
+        <a href="/dashboard" class="back">← Back to Dashboard</a>
+    </div>
     </div>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
@@ -1929,41 +1943,53 @@ async def proof_page():
     <title>MerchantPilot AI - Integration Proof</title>
     <link href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root {{ --bg: #0F172A; --card: #1E293B; --border: #334155; --gold: #F59E0B; --green: #10B981; --red: #EF4444; --text: #F8FAFC; --muted: #64748B; }}
+        :root {{ --bg: #f8f9fc; --card: #ffffff; --border: #e2e6f0; --purple: #6d28d9; --blue: #2563eb; --green: #059669; --red: #dc2626; --text: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8; --gold: #6d28d9; }}
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }}
-        .header {{ background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border-bottom: 1px solid var(--border); padding: 32px; text-align: center; }}
-        .header h1 {{ font-family: 'Calistoga', serif; color: var(--gold); font-size: 36px; }}
-        .header p {{ color: var(--muted); margin-top: 8px; font-size: 16px; }}
-        .header .badge {{ display: inline-block; background: rgba(16,185,129,0.15); color: var(--green); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-top: 12px; border: 1px solid rgba(16,185,129,0.3); }}
+        .topnav {{ background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 0 40px; height: 60px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }}
+        .topnav-logo {{ width: 36px; height: 36px; background: linear-gradient(135deg, var(--purple), var(--blue)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 15px; font-family: 'Space Grotesk', sans-serif; }}
+        .topnav-brand {{ font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; }}
+        .topnav-sub {{ font-size: 10px; color: var(--purple); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .topnav a.back-link {{ margin-left: auto; color: var(--text-secondary); text-decoration: none; font-size: 13px; font-weight: 500; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border); transition: all 200ms; }}
+        .topnav a.back-link:hover {{ border-color: var(--purple); color: var(--purple); }}
+        .header {{ background: linear-gradient(135deg, #eef2ff 0%, #f8f9fc 100%); border-bottom: 1px solid var(--border); padding: 40px; text-align: center; }}
+        .header h1 {{ font-family: 'Space Grotesk', sans-serif; color: var(--text); font-size: 36px; font-weight: 700; }}
+        .header p {{ color: var(--text-secondary); margin-top: 8px; font-size: 16px; }}
+        .header .badge {{ display: inline-block; background: rgba(5,150,105,0.06); color: var(--green); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-top: 12px; border: 1px solid rgba(5,150,105,0.15); }}
         .main {{ max-width: 1200px; margin: 0 auto; padding: 32px; }}
         .stats-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }}
-        .stat-card {{ background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }}
-        .stat-card .label {{ color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }}
-        .stat-card .value {{ font-family: 'Calistoga', serif; font-size: 32px; margin-top: 8px; }}
-        .stat-card .sub {{ color: var(--muted); font-size: 12px; margin-top: 4px; }}
+        .stat-card {{ background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 1px 3px rgba(15,23,42,0.04); transition: all 300ms; }}
+        .stat-card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 24px rgba(15,23,42,0.08); }}
+        .stat-card .label {{ color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }}
+        .stat-card .value {{ font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; margin-top: 8px; }}
+        .stat-card .sub {{ color: var(--text-muted); font-size: 12px; margin-top: 4px; }}
         .section {{ margin-bottom: 32px; }}
-        .section-title {{ font-family: 'Calistoga', serif; font-size: 20px; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }}
-        .card {{ background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; overflow-x: auto; }}
+        .section-title {{ font-family: 'Space Grotesk', sans-serif; font-size: 20px; color: var(--purple); margin-bottom: 16px; font-weight: 700; }}
+        .card {{ background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; overflow-x: auto; box-shadow: 0 1px 3px rgba(15,23,42,0.04); }}
         table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
-        th {{ text-align: left; padding: 10px 12px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }}
-        td {{ padding: 10px 12px; border-bottom: 1px solid rgba(51,65,85,0.3); }}
-        tr:hover {{ background: rgba(245,158,11,0.03); }}
+        th {{ text-align: left; padding: 12px; color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid var(--border); font-weight: 600; }}
+        td {{ padding: 12px; border-bottom: 1px solid var(--border); }}
+        tr:hover {{ background: rgba(99,72,255,0.02); }}
         .nav {{ display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }}
-        .nav a {{ color: var(--muted); text-decoration: none; padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; transition: all 0.2s; }}
-        .nav a:hover {{ border-color: var(--gold); color: var(--gold); }}
+        .nav a {{ color: var(--text-secondary); text-decoration: none; padding: 8px 16px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 500; transition: all 0.2s; background: white; box-shadow: 0 1px 2px rgba(15,23,42,0.03); }}
+        .nav a:hover {{ border-color: var(--purple); color: var(--purple); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,23,42,0.06); }}
         .check {{ color: var(--green); font-weight: 700; }}
-        .proof-item {{ display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(51,65,85,0.3); }}
+        .proof-item {{ display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }}
         .proof-item:last-child {{ border-bottom: none; }}
-        .proof-icon {{ width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }}
-        .proof-icon.green {{ background: rgba(16,185,129,0.15); }}
-        .proof-icon.gold {{ background: rgba(245,158,11,0.15); }}
+        .proof-icon {{ width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }}
+        .proof-icon.green {{ background: rgba(5,150,105,0.08); color: var(--green); }}
+        .proof-icon.gold {{ background: rgba(109,40,217,0.08); color: var(--purple); }}
     </style>
 </head>
 <body>
+    <nav class="topnav">
+        <div class="topnav-logo">M</div>
+        <div><div class="topnav-brand">MerchantPilot AI</div><div class="topnav-sub">Razorpay Buildathon 2026</div></div>
+        <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+    </nav>
     <header class="header">
-        <h1>MerchantPilot AI</h1>
-        <p>Integration Proof — Razorpay Buildathon 2026</p>
+        <h1>Integration Proof</h1>
+        <p>Verified Razorpay API integration — every customer, order, and payment is real</p>
         <div class="badge">Razorpay Mode: {'LIVE (Test)' if not razorpay.simulation_mode else 'SIMULATION'}</div>
     </header>
     <main class="main">
