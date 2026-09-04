@@ -702,14 +702,14 @@ import time
 
 @app.post("/api/test-payment/create")
 async def create_test_payment():
-    """Create a ₹1 payment link for real payment testing."""
+    """Create a ₹10 payment link for real payment testing."""
     razorpay = RazorpayClient()
     audit = AuditTrail()
 
     result = razorpay.execute_with_retry(
         razorpay.create_payment_link,
-        amount=100,  # ₹1 in paise
-        description="MerchantPilot AI - Real Payment Test (₹1)",
+        amount=1000,  # ₹10 in paise
+        description="MerchantPilot AI - Real Payment Test (₹10)",
         notes={"purpose": "real_payment_test", "merchant_id": "M0001"},
     )
 
@@ -720,7 +720,7 @@ async def create_test_payment():
             details={
                 "payment_link_id": result.get("payment_link_id", ""),
                 "short_url": result.get("short_url", ""),
-                "amount": 1,
+                "amount": 10,
             },
         )
 
@@ -728,7 +728,7 @@ async def create_test_payment():
         "success": result.get("success", False),
         "payment_link_id": result.get("payment_link_id", ""),
         "url": result.get("short_url", ""),
-        "amount": 1,
+        "amount": 10,
         "razorpay_mode": razorpay.get_mode(),
     }
 
@@ -831,14 +831,14 @@ async def test_payment_page():
         <!-- Steps -->
         <div class="card">
             <div class="card-title">Payment Flow</div>
-            <div class="step" id="step1"><div class="step-num wait">1</div><div class="step-text">Create ₹1 payment link</div></div>
+            <div class="step" id="step1"><div class="step-num wait">1</div><div class="step-text">Create ₹10 payment link</div></div>
             <div class="step" id="step2"><div class="step-num wait">2</div><div class="step-text">Open link and pay with test UPI</div></div>
             <div class="step" id="step3"><div class="step-num wait">3</div><div class="step-text">Webhook fires, payment captured</div></div>
             <div class="step" id="step4"><div class="step-num wait">4</div><div class="step-text">Show captured status in Razorpay</div></div>
         </div>
 
         <!-- Action -->
-        <button class="btn btn-primary" id="createBtn" onclick="createPaymentLink()">Create ₹1 Payment Link</button>
+        <button class="btn btn-primary" id="createBtn" onclick="createPaymentLink()">Create ₹10 Payment Link</button>
 
         <!-- Payment Link -->
         <div class="card" id="linkCard" style="display: none;">
@@ -854,7 +854,7 @@ async def test_payment_page():
         <!-- Success -->
         <div class="success-box" id="successBox" style="display: none;">
             <h3>Payment Captured!</h3>
-            <p style="margin-top: 8px;">₹1 received via test UPI</p>
+            <p style="margin-top: 8px;">₹10 received via test UPI</p>
             <p style="color: var(--muted); font-size: 13px; margin-top: 8px;">Check your Razorpay dashboard (TEST mode) to verify</p>
         </div>
 
@@ -893,7 +893,7 @@ async def test_payment_page():
             btn.textContent = 'Creating...';
 
             document.getElementById('logCard').style.display = 'block';
-            log('Creating ₹1 payment link...', 'info');
+            log('Creating ₹10 payment link...', 'info');
 
             try {
                 const resp = await fetch('/api/test-payment/create', { method: 'POST' });
