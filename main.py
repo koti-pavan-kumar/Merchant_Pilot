@@ -296,6 +296,25 @@ async def list_merchants():
     }
 
 
+@app.get("/api/razorpay-customers")
+async def list_razorpay_customers():
+    """
+    List real Razorpay test customers created via API.
+    These are visible in the Razorpay dashboard.
+    """
+    customers_file = Path("data/razorpay_customers.json")
+    if not customers_file.exists():
+        return {"total": 0, "customers": [], "message": "No test customers yet. Run: python setup_test_customers.py"}
+
+    with open(customers_file) as f:
+        customers = json.load(f)
+
+    return {
+        "total": len(customers),
+        "customers": customers,
+    }
+
+
 @app.get("/api/merchants/{merchant_id}/analysis")
 async def analyze_merchant(merchant_id: str):
     """Get detailed AI analysis for a specific merchant."""
