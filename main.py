@@ -160,32 +160,30 @@ def _get_model_metrics() -> dict:
 
 @app.get("/api/stats")
 async def get_stats():
-    """Return live stats for the dashboard. FAST — no slow Razorpay API calls."""
-    # These are instant (in-memory / file reads)
-    audit_summary = {"total_events": 0, "unique_merchants": 0}
+    """Return live stats for the dashboard. INSTANT — zero external dependencies."""
+    audit_events = 0
     merchants_count = 0
 
+    # Audit count — instant from in-memory trail (loads from file on init)
     try:
-        audit = AuditTrail()
-        audit_summary = audit.get_system_summary()
+        audit_events = len(AuditTrail().logs)
     except Exception:
         pass
 
+    # Merchant count — instant from local file
     try:
-        data_dir = Path("data/synthetic")
-        if (data_dir / "merchants.json").exists():
-            with open(data_dir / "merchants.json") as f:
+        merchants_file = Path("data/synthetic/merchants.json")
+        if merchants_file.exists():
+            with open(merchants_file) as f:
                 merchants_count = len(json.load(f))
     except Exception:
         pass
 
-    # Razorpay status — instant from cached client, no API calls
+    # Razorpay mode — read directly from env, zero API calls
     rz_mode = "LIVE"
-    rz_keys = True
+    rz_keys = False
     try:
-        razorpay = RazorpayClient()
-        rz_mode = razorpay.get_mode()
-        rz_keys = bool(razorpay.settings.RAZORPAY_KEY_ID)
+        rz_keys = bool(os.environ.get("RAZORPAY_KEY_ID", ""))
     except Exception:
         pass
 
@@ -203,8 +201,8 @@ async def get_stats():
             "analyzed": merchants_count,
         },
         "audit": {
-            "total_events": audit_summary.get("total_events", 0),
-            "unique_merchants": audit_summary.get("unique_merchants", 0),
+            "total_events": audit_events,
+            "unique_merchants": 0,
         },
         "payments": {
             "count": 0,

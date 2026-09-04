@@ -1003,7 +1003,7 @@
         async function fetchStats() {
             try {
                 document.getElementById('apiStatus').textContent = 'Fetching...';
-                const r = await fetch('/api/stats');
+                const r = await fetch('/api/stats?t=' + Date.now());
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 const d = await r.json();
                 document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
