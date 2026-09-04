@@ -534,6 +534,59 @@ async def get_recent_audit():
     }
 
 
+@app.get("/api/recovery/history")
+async def get_recovery_history():
+    """Return recovery events from audit trail for charting."""
+    audit = AuditTrail()
+    logs = audit.get_recent_logs(limit=200)
+
+    recovery_events = []
+    total_recovered = 0
+    daily_recovered = {}
+
+    for log in logs:
+        if log.event_type == "revenue_recovered":
+            amount = log.details.get("amount", 0)
+            total_recovered += amount
+            day = log.timestamp.strftime("%Y-%m-%d")
+            daily_recovered[day] = daily_recovered.get(day, 0) + amount
+            recovery_events.append({
+                "timestamp": log.timestamp.isoformat(),
+                "amount": amount,
+                "merchant_id": log.merchant_id,
+                "method": log.details.get("method", "unknown"),
+            })
+
+        elif log.event_type == "webhook_payment_captured":
+            amount = log.details.get("amount", 0)
+            if amount > 0:
+                total_recovered += amount
+                day = log.timestamp.strftime("%Y-%m-%d")
+                daily_recovered[day] = daily_recovered.get(day, 0) + amount
+
+        elif log.event_type in ("recovery_payment_link_created", "payment_link_created"):
+            amount = log.details.get("amount", 0)
+            recovery_events.append({
+                "timestamp": log.timestamp.isoformat(),
+                "amount": amount,
+                "merchant_id": log.merchant_id,
+                "method": "payment_link",
+            })
+
+    # Sort daily data for chart
+    daily_series = sorted([
+        {"date": day, "amount": round(amt, 2)}
+        for day, amt in daily_recovered.items()
+    ], key=lambda x: x["date"])
+
+    return {
+        "total_recovered": round(total_recovered, 2),
+        "recovery_count": len(recovery_events),
+        "events": recovery_events[:50],
+        "daily_series": daily_series,
+    }
+
+
 def _serve_dashboard():
     """Read and return the dashboard HTML file on every request."""
     candidates = [

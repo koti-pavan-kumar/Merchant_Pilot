@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MerchantPilot AI - Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --color-primary: #F59E0B;
@@ -776,14 +777,38 @@
             </div>
         </div>
 
-        <!-- Audit Trail -->
-        <div class="card">
-            <div class="card-title">
-                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
-                Recent Audit Trail
+        <!-- Recovery Chart + Audit Trail -->
+        <div class="dashboard-grid">
+            <!-- Revenue Recovery Chart -->
+            <div class="card">
+                <div class="card-title">
+                    <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+                    Revenue Recovery
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <div style="color: var(--color-muted); font-size: 12px; text-transform: uppercase;">Total Recovered</div>
+                        <div style="font-family: 'Calistoga', serif; font-size: 28px; color: var(--color-success);" id="totalRecovered">Rs.0</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: var(--color-muted); font-size: 12px; text-transform: uppercase;">Recovery Actions</div>
+                        <div style="font-family: 'Calistoga', serif; font-size: 28px; color: var(--color-primary);" id="recoveryCount">0</div>
+                    </div>
+                </div>
+                <div style="position: relative; height: 200px;">
+                    <canvas id="recoveryChart"></canvas>
+                </div>
             </div>
-            <div id="auditTrail">
-                <p style="color: var(--color-muted); font-size: 13px;">Loading audit events...</p>
+
+            <!-- Audit Trail -->
+            <div class="card">
+                <div class="card-title">
+                    <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+                    Recent Audit Trail
+                </div>
+                <div id="auditTrail">
+                    <p style="color: var(--color-muted); font-size: 13px;">Loading audit events...</p>
+                </div>
             </div>
         </div>
     </main>
@@ -1020,6 +1045,7 @@
                 fetchStats();
                 fetchAuditTrail();
                 fetchMerchants();
+                fetchRecoveryData();
 
             } catch (error) {
                 stepsDiv.innerHTML = `<p style="color: var(--color-danger);">Demo failed: ${error.message}</p>`;
@@ -1060,13 +1086,131 @@
             }
         }
 
+        // ── Recovery Chart ──
+
+        let recoveryChart = null;
+
+        async function fetchRecoveryData() {
+            try {
+                const response = await fetch('/api/recovery/history');
+                const data = await response.json();
+
+                // Update counters
+                document.getElementById('totalRecovered').textContent = 'Rs.' + data.total_recovered.toLocaleString();
+                document.getElementById('recoveryCount').textContent = data.recovery_count;
+
+                // Build chart
+                const ctx = document.getElementById('recoveryChart').getContext('2d');
+                const series = data.daily_series || [];
+
+                if (series.length === 0) {
+                    // No data yet — show placeholder
+                    document.getElementById('totalRecovered').textContent = 'Rs.0';
+                    document.getElementById('recoveryCount').textContent = '0';
+                    return;
+                }
+
+                const labels = series.map(s => {
+                    const d = new Date(s.date);
+                    return d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+                });
+                const values = series.map(s => s.amount);
+
+                // Cumulative line
+                let cumulative = 0;
+                const cumulativeValues = values.map(v => { cumulative += v; return cumulative; });
+
+                if (recoveryChart) {
+                    recoveryChart.destroy();
+                }
+
+                recoveryChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Daily Recovery',
+                                data: values,
+                                backgroundColor: 'rgba(16, 185, 129, 0.3)',
+                                borderColor: '#10B981',
+                                borderWidth: 2,
+                                borderRadius: 6,
+                                order: 2,
+                            },
+                            {
+                                label: 'Cumulative',
+                                data: cumulativeValues,
+                                type: 'line',
+                                borderColor: '#F59E0B',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 3,
+                                pointBackgroundColor: '#F59E0B',
+                                order: 1,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#64748B',
+                                    font: { family: 'Inter', size: 11 },
+                                    boxWidth: 12,
+                                    padding: 12,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#1E293B',
+                                titleColor: '#F8FAFC',
+                                bodyColor: '#F8FAFC',
+                                borderColor: '#334155',
+                                borderWidth: 1,
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': Rs.' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                                ticks: { color: '#64748B', font: { size: 10 } }
+                            },
+                            y: {
+                                grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                                ticks: {
+                                    color: '#64748B',
+                                    font: { size: 10 },
+                                    callback: function(value) { return 'Rs.' + value.toLocaleString(); }
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Failed to fetch recovery data:', error);
+            }
+        }
+
         // Fetch on load + auto-refresh every 30s
         fetchStats();
         fetchMerchants();
         fetchAuditTrail();
+        fetchRecoveryData();
         setInterval(fetchStats, 30000);
         setInterval(fetchMerchants, 60000);
         setInterval(fetchAuditTrail, 15000);
+        setInterval(fetchRecoveryData, 30000);
     </script>
 </body>
 </html>
