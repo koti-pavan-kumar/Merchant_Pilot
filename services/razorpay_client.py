@@ -134,7 +134,6 @@ class RazorpayClient:
                 if customer_phone:
                     customer["contact"] = customer_phone
                 payload["customer"] = customer
-
             response = self.client.payment_link.create(payload)
 
             result = {
