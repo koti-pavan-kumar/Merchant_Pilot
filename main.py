@@ -1098,29 +1098,30 @@ async def checkout_page():
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MerchantPilot AI - Checkout</title>
     <style>
-        :root { --bg: #0F172A; --card: #1E293B; --border: #334155; --gold: #F59E0B; --green: #10B981; --red: #EF4444; --text: #F8FAFC; --muted: #64748B; }
+        :root { --bg: #050510; --card: rgba(15, 15, 35, 0.6); --border: rgba(120, 100, 255, 0.12); --gold: #7c3aed; --green: #10b981; --red: #ef4444; --text: #f0eeff; --muted: #8b85b8; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .container { max-width: 500px; width: 100%; padding: 32px; text-align: center; }
-        h1 { color: var(--gold); font-size: 24px; margin-bottom: 8px; }
-        .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
-        .amount { font-size: 48px; font-weight: 700; color: var(--text); margin: 24px 0; }
+        .container { max-width: 480px; width: 100%; padding: 32px; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 20px; backdrop-filter: blur(12px); position: relative; overflow: hidden; }
+        .container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #7c3aed, #3b82f6, transparent); }
+        h1 { font-family: 'Space Grotesk', sans-serif; background: linear-gradient(135deg, #f0eeff, #8b85b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
+        .amount { font-family: 'Space Grotesk', sans-serif; font-size: 48px; font-weight: 700; color: var(--text); margin: 24px 0; }
         .amount span { font-size: 24px; color: var(--muted); }
-        .btn { display: inline-block; padding: 16px 48px; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; background: var(--green); color: white; transition: all 0.2s; }
-        .btn:hover { background: #34D399; transform: translateY(-1px); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .card-info { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 24px; text-align: left; }
-        .card-info h3 { font-size: 14px; color: var(--gold); margin-bottom: 12px; }
+        .btn { display: inline-block; padding: 16px 48px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, #10b981, #06b6d4); color: white; transition: all 0.2s; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .card-info { background: rgba(5, 5, 16, 0.5); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 24px; text-align: left; }
+        .card-info h3 { font-size: 12px; color: var(--gold); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
         .card-info table { width: 100%; font-size: 13px; }
         .card-info td { padding: 4px 0; }
         .card-info td:first-child { color: var(--muted); width: 120px; }
         .card-info td:last-child { font-family: 'JetBrains Mono', monospace; }
-        .success { background: rgba(16,185,129,0.1); border: 1px solid var(--green); border-radius: 12px; padding: 32px; margin-top: 24px; display: none; }
+        .success { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; padding: 32px; margin-top: 24px; display: none; }
         .success h2 { color: var(--green); font-size: 20px; margin-bottom: 8px; }
         .success p { color: var(--muted); font-size: 14px; }
-        .error { background: rgba(239,68,68,0.1); border: 1px solid var(--red); border-radius: 12px; padding: 20px; margin-top: 24px; display: none; }
+        .error { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 20px; margin-top: 24px; display: none; }
         .error p { color: var(--red); font-size: 14px; }
-        .back { color: var(--muted); text-decoration: none; font-size: 14px; display: inline-block; margin-top: 24px; }
+        .back { color: var(--muted); text-decoration: none; font-size: 13px; display: inline-block; margin-top: 24px; transition: color 200ms; }
         .back:hover { color: var(--gold); }
     </style>
 </head>
@@ -1670,35 +1671,37 @@ async def merchant_health_page(merchant_id: str):
     <title>{merchant['business_name']} - MerchantPilot AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        :root {{ --bg: #0F172A; --card: #1E293B; --border: #334155; --gold: #F59E0B; --green: #10B981; --red: #EF4444; --text: #F8FAFC; --muted: #64748B; }}
+        :root {{ --bg: #050510; --card: rgba(15, 15, 35, 0.6); --border: rgba(120, 100, 255, 0.12); --gold: #7c3aed; --green: #10b981; --red: #ef4444; --text: #f0eeff; --muted: #8b85b8; }}
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }}
-        .header {{ background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border-bottom: 1px solid var(--border); padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }}
-        .header h1 {{ font-family: 'Calistoga', serif; color: var(--gold); font-size: 24px; }}
+        .header {{ background: rgba(5, 5, 16, 0.8); border-bottom: 1px solid var(--border); padding: 24px 40px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(20px); position: relative; }}
+        .header::after {{ content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.3), rgba(59, 130, 246, 0.3), transparent); }}
+        .header h1 {{ font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; background: linear-gradient(135deg, #f0eeff, #8b85b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }}
         .header a {{ color: var(--muted); text-decoration: none; font-size: 14px; }}
         .header a:hover {{ color: var(--gold); }}
-        .main {{ max-width: 1000px; margin: 0 auto; padding: 32px; }}
-        .health-hero {{ display: grid; grid-template-columns: 200px 1fr; gap: 32px; margin-bottom: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }}
+        .main {{ max-width: 1000px; margin: 0 auto; padding: 32px 40px; }}
+        .health-hero {{ display: grid; grid-template-columns: 200px 1fr; gap: 32px; margin-bottom: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; backdrop-filter: blur(12px); position: relative; overflow: hidden; }}
+        .health-hero::before {{ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, {risk_color}, transparent); }}
         .health-score {{ text-align: center; }}
-        .score-circle {{ width: 140px; height: 140px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 4px solid {risk_color}; margin: 0 auto; }}
-        .score-value {{ font-family: 'Calistoga', serif; font-size: 42px; color: {risk_color}; }}
-        .score-label {{ font-size: 12px; color: var(--muted); text-transform: uppercase; }}
-        .risk-badge {{ display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-top: 12px; background: rgba({{'239,68,68' if risk_level in ['critical','high'] else '245,158,11' if risk_level == 'medium' else '16,185,129'}}, 0.15); color: {risk_color}; }}
+        .score-circle {{ width: 140px; height: 140px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 3px solid {risk_color}; margin: 0 auto; box-shadow: 0 0 30px rgba({{'239,68,68' if risk_level in ['critical','high'] else '245,158,11' if risk_level == 'medium' else '16,185,129'}}, 0.15); }}
+        .score-value {{ font-family: 'Space Grotesk', sans-serif; font-size: 42px; font-weight: 700; color: {risk_color}; }}
+        .score-label {{ font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }}
+        .risk-badge {{ display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 12px; background: rgba({{'239,68,68' if risk_level in ['critical','high'] else '245,158,11' if risk_level == 'medium' else '16,185,129'}}, 0.1); color: {risk_color}; border: 1px solid rgba({{'239,68,68' if risk_level in ['critical','high'] else '245,158,11' if risk_level == 'medium' else '16,185,129'}}, 0.2); }}
         .merchant-info {{ padding: 8px 0; }}
-        .merchant-info h2 {{ font-family: 'Calistoga', serif; font-size: 28px; margin-bottom: 8px; }}
-        .merchant-meta {{ color: var(--muted); font-size: 14px; margin-bottom: 16px; }}
-        .stats-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }}
-        .stat-item {{ background: rgba(15,23,42,0.5); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }}
-        .stat-label {{ color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }}
-        .stat-value {{ font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; margin-top: 4px; }}
+        .merchant-info h2 {{ font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 8px; }}
+        .merchant-meta {{ color: var(--muted); font-size: 13px; margin-bottom: 16px; }}
+        .stats-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }}
+        .stat-item {{ background: rgba(5, 5, 16, 0.5); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }}
+        .stat-label {{ color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }}
+        .stat-value {{ font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; margin-top: 4px; }}
         .section {{ margin-bottom: 24px; }}
-        .section-title {{ font-family: 'Calistoga', serif; font-size: 18px; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }}
-        .stat-card {{ background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }}
+        .section-title {{ font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px; }}
+        .stat-card {{ background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 12px; backdrop-filter: blur(12px); }}
         .risk-factors {{ list-style: none; padding: 0; }}
-        .risk-factors li {{ padding: 8px 0; border-bottom: 1px solid rgba(51,65,85,0.3); font-size: 14px; color: #94A3B8; }}
+        .risk-factors li {{ padding: 10px 0; border-bottom: 1px solid rgba(120, 100, 255, 0.06); font-size: 13px; color: var(--muted); }}
         .risk-factors li:before {{ content: '• '; color: var(--red); font-weight: 700; }}
-        .back-btn {{ display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 14px; margin-bottom: 24px; }}
-        .back-btn:hover {{ border-color: var(--gold); color: var(--gold); }}
+        .back-btn {{ display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); border-radius: 10px; color: var(--muted); text-decoration: none; font-size: 13px; margin-bottom: 24px; backdrop-filter: blur(10px); transition: all 200ms; }}
+        .back-btn:hover {{ border-color: rgba(124, 58, 237, 0.3); color: var(--gold); }}
     </style>
 </head>
 <body>
