@@ -700,6 +700,244 @@ async def get_recovery_history():
 
 import time
 
+# ── Order-Based Real Payment Test (shows ALL payment methods) ──────
+
+@app.post("/api/test-order/create")
+async def create_test_order():
+    """
+    Create a Razorpay order for real payment testing.
+    Returns order_id + key_id so the frontend can open Checkout.
+    Checkout shows ALL payment methods: Card, UPI, Netbanking, Wallet.
+    """
+    razorpay = RazorpayClient()
+    audit = AuditTrail()
+
+    if razorpay.simulation_mode:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Razorpay keys not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to .env"}
+        )
+
+    # Create real Razorpay order
+    order_result = razorpay.execute_with_retry(
+        razorpay.create_order,
+        amount=1000,  # ₹10 in paise
+        receipt=f"test_payment_{int(time.time())}",
+        notes={"purpose": "real_payment_test", "merchant_id": "M0001"},
+    )
+
+    if not order_result.get("success"):
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Order creation failed: {order_result.get('error', 'Unknown')}"}
+        )
+
+    audit.log_event(
+        merchant_id="M0001",
+        event_type="test_order_created",
+        details={
+            "order_id": order_result.get("order_id", ""),
+            "amount": 10,
+        },
+    )
+
+    return {
+        "success": True,
+        "order_id": order_result.get("order_id", ""),
+        "key_id": razorpay.settings.RAZORPAY_KEY_ID,
+        "amount": 1000,
+        "currency": "INR",
+        "razorpay_mode": razorpay.get_mode(),
+    }
+
+
+@app.post("/api/test-payment/capture")
+async def capture_test_payment(request: Request):
+    """
+    Called by frontend after successful payment.
+    Logs the real captured payment in audit trail.
+    """
+    body = await request.json()
+    razorpay_payment_id = body.get("razorpay_payment_id", "")
+    razorpay_order_id = body.get("razorpay_order_id", "")
+    razorpay_signature = body.get("razorpay_signature", "")
+
+    audit = AuditTrail()
+    webhook = WebhookHandler()
+
+    # Log the real payment capture
+    audit.log_event(
+        merchant_id="M0001",
+        event_type="test_payment_captured",
+        details={
+            "payment_id": razorpay_payment_id,
+            "order_id": razorpay_order_id,
+            "amount": 10,
+        },
+    )
+
+    # Fire webhook handler for real captured payment
+    simulated_success = {
+        "id": razorpay_payment_id,
+        "amount": 1000,
+        "method": body.get("method", "card"),
+        "status": "captured",
+        "notes": {"merchant_id": "M0001", "order_id": razorpay_order_id},
+    }
+    webhook.handle_event("payment.captured", simulated_success)
+
+    return {
+        "success": True,
+        "payment_id": razorpay_payment_id,
+        "order_id": razorpay_order_id,
+        "amount": 10,
+        "message": "Payment captured and logged in audit trail",
+    }
+
+
+@app.get("/checkout", response_class=HTMLResponse)
+async def checkout_page():
+    """
+    Serve the Razorpay Checkout page.
+    This creates an order and opens the Checkout popup showing ALL payment methods.
+    """
+    page = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MerchantPilot AI - Checkout</title>
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --border: #334155; --gold: #F59E0B; --green: #10B981; --red: #EF4444; --text: #F8FAFC; --muted: #64748B; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 500px; width: 100%; padding: 32px; text-align: center; }
+        h1 { color: var(--gold); font-size: 24px; margin-bottom: 8px; }
+        .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+        .amount { font-size: 48px; font-weight: 700; color: var(--text); margin: 24px 0; }
+        .amount span { font-size: 24px; color: var(--muted); }
+        .btn { display: inline-block; padding: 16px 48px; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; background: var(--green); color: white; transition: all 0.2s; }
+        .btn:hover { background: #34D399; transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .card-info { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 24px; text-align: left; }
+        .card-info h3 { font-size: 14px; color: var(--gold); margin-bottom: 12px; }
+        .card-info table { width: 100%; font-size: 13px; }
+        .card-info td { padding: 4px 0; }
+        .card-info td:first-child { color: var(--muted); width: 120px; }
+        .card-info td:last-child { font-family: 'JetBrains Mono', monospace; }
+        .success { background: rgba(16,185,129,0.1); border: 1px solid var(--green); border-radius: 12px; padding: 32px; margin-top: 24px; display: none; }
+        .success h2 { color: var(--green); font-size: 20px; margin-bottom: 8px; }
+        .success p { color: var(--muted); font-size: 14px; }
+        .error { background: rgba(239,68,68,0.1); border: 1px solid var(--red); border-radius: 12px; padding: 20px; margin-top: 24px; display: none; }
+        .error p { color: var(--red); font-size: 14px; }
+        .back { color: var(--muted); text-decoration: none; font-size: 14px; display: inline-block; margin-top: 24px; }
+        .back:hover { color: var(--gold); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MerchantPilot AI</h1>
+        <p class="subtitle">Real Payment Test — Razorpay Test Mode</p>
+        <div class="amount">₹10<span>.00</span></div>
+        <button class="btn" id="payBtn" onclick="startCheckout()">Pay ₹10 Now</button>
+        <div class="success" id="successBox">
+            <h2>Payment Captured!</h2>
+            <p id="successDetail"></p>
+            <p style="margin-top: 8px;">Check your Razorpay dashboard (TEST mode) for proof.</p>
+        </div>
+        <div class="error" id="errorBox"><p id="errorDetail"></p></div>
+        <div class="card-info">
+            <h3>Test Card (will work)</h3>
+            <table>
+                <tr><td>Card Number</td><td>4111 1111 1111 1111</td></tr>
+                <tr><td>Expiry</td><td>12/28</td></tr>
+                <tr><td>CVV</td><td>123</td></tr>
+                <tr><td>Name</td><td>Test User</td></tr>
+            </table>
+        </div>
+        <a href="/test-payment" class="back">← Back to Test Payment Page</a>
+    </div>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        async function startCheckout() {
+            const btn = document.getElementById('payBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating order...';
+
+            try {
+                const resp = await fetch('/api/test-order/create', { method: 'POST' });
+                const data = await resp.json();
+
+                if (!data.success) {
+                    document.getElementById('errorBox').style.display = 'block';
+                    document.getElementById('errorDetail').textContent = data.error || 'Failed to create order';
+                    btn.disabled = false;
+                    btn.textContent = 'Retry';
+                    return;
+                }
+
+                btn.textContent = 'Opening checkout...';
+
+                const options = {
+                    key: data.key_id,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'MerchantPilot AI',
+                    description: 'Real Payment Test (₹10)',
+                    order_id: data.order_id,
+                    handler: async function(response) {
+                        // Payment successful!
+                        try {
+                            await fetch('/api/test-payment/capture', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(response),
+                            });
+                        } catch(e) { console.error('Capture log failed:', e); }
+
+                        document.getElementById('successBox').style.display = 'block';
+                        document.getElementById('successDetail').textContent = `Payment ID: ${response.razorpay_payment_id}`;
+                        btn.textContent = 'Paid!';
+                        btn.style.background = 'var(--green)';
+                    },
+                    prefill: {
+                        name: 'Test User',
+                        email: 'test@merchantpilot.ai',
+                    },
+                    theme: {
+                        color: '#F59E0B',
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            btn.disabled = false;
+                            btn.textContent = 'Pay ₹10 Now';
+                        }
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function(response) {
+                    document.getElementById('errorBox').style.display = 'block';
+                    document.getElementById('errorDetail').textContent = `Payment failed: ${response.error.description}`;
+                    btn.disabled = false;
+                    btn.textContent = 'Retry';
+                });
+                rzp.open();
+            } catch(e) {
+                document.getElementById('errorBox').style.display = 'block';
+                document.getElementById('errorDetail').textContent = e.message;
+                btn.disabled = false;
+                btn.textContent = 'Retry';
+            }
+        }
+    </script>
+</body>
+</html>
+"""
+    return HTMLResponse(content=page, status_code=200)
+
+
 @app.post("/api/test-payment/create")
 async def create_test_payment():
     """Create a ₹10 payment link for real payment testing."""
@@ -830,15 +1068,16 @@ async def test_payment_page():
 
         <!-- Steps -->
         <div class="card">
-            <div class="card-title">Payment Flow</div>
-            <div class="step" id="step1"><div class="step-num wait">1</div><div class="step-text">Create ₹10 payment link</div></div>
-            <div class="step" id="step2"><div class="step-num wait">2</div><div class="step-text">Open link and pay with test UPI</div></div>
-            <div class="step" id="step3"><div class="step-num wait">3</div><div class="step-text">Webhook fires, payment captured</div></div>
-            <div class="step" id="step4"><div class="step-num wait">4</div><div class="step-text">Show captured status in Razorpay</div></div>
+            <div class="card-title">Payment Flow (Order-Based — shows ALL payment methods)</div>
+            <div class="step" id="step1"><div class="step-num wait">1</div><div class="step-text">Open Razorpay Checkout (Card, UPI, Netbanking)</div></div>
+            <div class="step" id="step2"><div class="step-num wait">2</div><div class="step-text">Pay with test card or test UPI</div></div>
+            <div class="step" id="step3"><div class="step-num wait">3</div><div class="step-text">Payment captured — webhook fires</div></div>
+            <div class="step" id="step4"><div class="step-num wait">4</div><div class="step-text">Verify in Razorpay dashboard</div></div>
         </div>
 
         <!-- Action -->
-        <button class="btn btn-primary" id="createBtn" onclick="createPaymentLink()">Create ₹10 Payment Link</button>
+        <button class="btn btn-primary" id="createBtn" onclick="window.location.href='/checkout'">Open Checkout (Pay ₹10)</button>
+        <p style="text-align: center; color: var(--muted); font-size: 13px; margin-top: 8px;">Opens Razorpay Checkout with Card + UPI + Netbanking</p>
 
         <!-- Payment Link -->
         <div class="card" id="linkCard" style="display: none;">
