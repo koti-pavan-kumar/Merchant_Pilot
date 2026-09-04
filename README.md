@@ -51,6 +51,26 @@ Merchant Data ──> ML Churn Model ──> Gemini AI Analysis ──> Razorpay
 
 ## Quick Start
 
+### Option 1: Docker (Recommended)
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/koti-pavan-kumar/Merchant_Pilot.git
+cd Merchant_Pilot
+
+# 2. Set up API keys
+cp .env.example .env
+# Edit .env with your Razorpay test keys and Gemini API key
+
+# 3. Run with one command
+docker compose up --build
+
+# 4. Open the dashboard
+# http://localhost:8000/dashboard
+```
+
+### Option 2: Local Setup
+
 ```bash
 # 1. Install dependencies
 pip install -r requirements.txt
@@ -67,6 +87,22 @@ python main.py
 
 # 5. Check Razorpay dashboard for real orders
 # https://dashboard.razorpay.com (switch to TEST mode)
+```
+
+### Docker Commands
+
+```bash
+# Start in background
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop
+docker compose down
+
+# Rebuild after code changes
+docker compose up --build
 ```
 
 ## Architecture

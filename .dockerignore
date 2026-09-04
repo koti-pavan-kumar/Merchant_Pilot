@@ -1,0 +1,40 @@
+# Environment (secrets never in image)
+.env
+.env.example
+
+# Git
+.git
+.gitignore
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+.pytest_cache
+*.egg-info
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs (mounted as volume)
+logs/*.log
+
+# Virtual environments
+venv
+env
+.venv
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in container)
+*.md
+LICENSE
+
+# Test files (not needed in production)
+tests/
+test_*.py
