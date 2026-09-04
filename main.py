@@ -696,6 +696,276 @@ async def get_recovery_history():
     }
 
 
+# ── Real Payment Test ──────────────────────────────────
+
+import time
+
+@app.post("/api/test-payment/create")
+async def create_test_payment():
+    """Create a ₹1 payment link for real payment testing."""
+    razorpay = RazorpayClient()
+    audit = AuditTrail()
+
+    result = razorpay.execute_with_retry(
+        razorpay.create_payment_link,
+        amount=100,  # ₹1 in paise
+        description="MerchantPilot AI - Real Payment Test (₹1)",
+        notes={"purpose": "real_payment_test", "merchant_id": "M0001"},
+    )
+
+    if result.get("success"):
+        audit.log_event(
+            merchant_id="M0001",
+            event_type="test_payment_link_created",
+            details={
+                "payment_link_id": result.get("payment_link_id", ""),
+                "short_url": result.get("short_url", ""),
+                "amount": 1,
+            },
+        )
+
+    return {
+        "success": result.get("success", False),
+        "payment_link_id": result.get("payment_link_id", ""),
+        "url": result.get("short_url", ""),
+        "amount": 1,
+        "razorpay_mode": razorpay.get_mode(),
+    }
+
+
+@app.get("/api/test-payment/status/{payment_link_id}")
+async def check_payment_status(payment_link_id: str):
+    """Check if a payment link has been paid."""
+    razorpay = RazorpayClient()
+
+    if razorpay.simulation_mode:
+        return {
+            "success": True,
+            "status": "created",
+            "paid": False,
+            "mode": "simulation",
+        }
+
+    try:
+        response = razorpay.client.payment_link.fetch(payment_link_id)
+        status = response.get("status", "created")
+        amount_paid = response.get("amount_paid", 0)
+        return {
+            "success": True,
+            "status": status,
+            "paid": status == "paid",
+            "amount_paid": amount_paid / 100 if amount_paid else 0,
+            "amount": response.get("amount", 0) / 100,
+            "mode": "live",
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "status": "unknown",
+            "paid": False,
+        }
+
+
+@app.get("/test-payment", response_class=HTMLResponse)
+async def test_payment_page():
+    """Serve the real payment test page."""
+    page = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MerchantPilot AI - Real Payment Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --card: #1E293B; --border: #334155;
+            --gold: #F59E0B; --green: #10B981; --red: #EF4444;
+            --text: #F8FAFC; --muted: #64748B;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 600px; width: 100%; padding: 32px; }
+        h1 { font-family: 'Calistoga', serif; color: var(--gold); font-size: 28px; margin-bottom: 8px; }
+        .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+        .status-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(51,65,85,0.3); font-size: 14px; }
+        .status-row:last-child { border-bottom: none; }
+        .label { color: var(--muted); }
+        .value { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .value.live { color: var(--green); }
+        .value.pending { color: var(--gold); }
+        .value.error { color: var(--red); }
+        .btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; margin-bottom: 12px; }
+        .btn-primary { background: var(--green); color: white; }
+        .btn-primary:hover { background: #34D399; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+        .link-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0; }
+        .link-box a { color: var(--gold); font-family: 'JetBrains Mono', monospace; font-size: 14px; text-decoration: none; }
+        .link-box a:hover { text-decoration: underline; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .success-box { background: rgba(16,185,129,0.1); border: 1px solid var(--green); border-radius: 8px; padding: 20px; text-align: center; margin: 16px 0; }
+        .success-box h3 { color: var(--green); font-family: 'Calistoga', serif; font-size: 24px; }
+        .step { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(51,65,85,0.3); }
+        .step:last-child { border-bottom: none; }
+        .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+        .step-num.done { background: rgba(16,185,129,0.2); color: var(--green); border: 1px solid var(--green); }
+        .step-num.active { background: rgba(245,158,11,0.2); color: var(--gold); border: 1px solid var(--gold); animation: pulse 1.5s infinite; }
+        .step-num.wait { background: rgba(100,116,139,0.2); color: var(--muted); border: 1px solid var(--border); }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .step-text { font-size: 14px; }
+        .log { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); max-height: 150px; overflow-y: auto; margin-top: 12px; }
+        .log-entry { padding: 3px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Real Payment Test</h1>
+        <p class="subtitle">Prove the full loop works with real Razorpay test-mode money</p>
+
+        <!-- Steps -->
+        <div class="card">
+            <div class="card-title">Payment Flow</div>
+            <div class="step" id="step1"><div class="step-num wait">1</div><div class="step-text">Create ₹1 payment link</div></div>
+            <div class="step" id="step2"><div class="step-num wait">2</div><div class="step-text">Open link and pay with test UPI</div></div>
+            <div class="step" id="step3"><div class="step-num wait">3</div><div class="step-text">Webhook fires, payment captured</div></div>
+            <div class="step" id="step4"><div class="step-num wait">4</div><div class="step-text">Show captured status in Razorpay</div></div>
+        </div>
+
+        <!-- Action -->
+        <button class="btn btn-primary" id="createBtn" onclick="createPaymentLink()">Create ₹1 Payment Link</button>
+
+        <!-- Payment Link -->
+        <div class="card" id="linkCard" style="display: none;">
+            <div class="card-title">Payment Link</div>
+            <div class="link-box"><a id="paymentUrl" href="#" target="_blank">--</a></div>
+            <button class="btn btn-outline" onclick="window.open(document.getElementById('paymentUrl').href, '_blank')">Open in New Tab</button>
+            <div style="text-align: center; margin-top: 12px;">
+                <span class="spinner" id="pollSpinner" style="display: none;"></span>
+                <span id="pollStatus" style="color: var(--muted); font-size: 13px;">Waiting for payment...</span>
+            </div>
+        </div>
+
+        <!-- Success -->
+        <div class="success-box" id="successBox" style="display: none;">
+            <h3>Payment Captured!</h3>
+            <p style="margin-top: 8px;">₹1 received via test UPI</p>
+            <p style="color: var(--muted); font-size: 13px; margin-top: 8px;">Check your Razorpay dashboard (TEST mode) to verify</p>
+        </div>
+
+        <!-- Log -->
+        <div class="card" id="logCard" style="display: none;">
+            <div class="card-title">Event Log</div>
+            <div class="log" id="eventLog"></div>
+        </div>
+    </div>
+
+    <script>
+        let pollInterval = null;
+        let currentLinkId = null;
+
+        function log(msg, type) {
+            const div = document.getElementById('eventLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const icon = type === 'success' ? '\u2713' : type === 'error' ? '\u2717' : '\u25cf';
+            const color = type === 'success' ? 'var(--green)' : type === 'error' ? 'var(--red)' : 'var(--gold)';
+            entry.innerHTML = `<span style="color:${color}">${icon}</span> ${new Date().toLocaleTimeString()} ${msg}`;
+            div.appendChild(entry);
+            div.scrollTop = div.scrollHeight;
+        }
+
+        function setStep(n, status) {
+            const step = document.getElementById('step' + n);
+            const num = step.querySelector('.step-num');
+            num.className = 'step-num ' + status;
+            if (status === 'done') num.textContent = '\u2713';
+        }
+
+        async function createPaymentLink() {
+            const btn = document.getElementById('createBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
+            document.getElementById('logCard').style.display = 'block';
+            log('Creating ₹1 payment link...', 'info');
+
+            try {
+                const resp = await fetch('/api/test-payment/create', { method: 'POST' });
+                const data = await resp.json();
+
+                if (data.success) {
+                    currentLinkId = data.payment_link_id;
+                    document.getElementById('paymentUrl').href = data.url;
+                    document.getElementById('paymentUrl').textContent = data.url;
+                    document.getElementById('linkCard').style.display = 'block';
+                    document.getElementById('pollSpinner').style.display = 'inline-block';
+
+                    setStep(1, 'done');
+                    setStep(2, 'active');
+                    log(`Link created: ${data.url}`, 'success');
+                    log(`Mode: ${data.razorpay_mode}`, 'info');
+                    log('Open the link and pay with test UPI...', 'info');
+
+                    btn.textContent = 'Link Created!';
+
+                    // Start polling
+                    startPolling(data.payment_link_id);
+                } else {
+                    log(`Failed: ${data.error || 'Unknown error'}`, 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Retry';
+                }
+            } catch (e) {
+                log(`Error: ${e.message}`, 'error');
+                btn.disabled = false;
+                btn.textContent = 'Retry';
+            }
+        }
+
+        function startPolling(linkId) {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(async () => {
+                try {
+                    const resp = await fetch(`/api/test-payment/status/${linkId}`);
+                    const data = await resp.json();
+
+                    document.getElementById('pollStatus').textContent = `Status: ${data.status}`;
+
+                    if (data.paid) {
+                        clearInterval(pollInterval);
+                        setStep(2, 'done');
+                        setStep(3, 'done');
+                        setStep(4, 'done');
+                        document.getElementById('pollSpinner').style.display = 'none';
+                        document.getElementById('pollStatus').innerHTML = '<span style="color: var(--green); font-weight: 600;">CAPTURED</span>';
+                        document.getElementById('successBox').style.display = 'block';
+                        log('Payment CAPTURED via Razorpay!', 'success');
+                        log(`Amount: ₹${data.amount_paid}`, 'success');
+                        log('Check Razorpay dashboard TEST mode for proof', 'success');
+                    } else if (data.status === 'expired') {
+                        clearInterval(pollInterval);
+                        document.getElementById('pollSpinner').style.display = 'none';
+                        document.getElementById('pollStatus').innerHTML = '<span style="color: var(--red);">Expired</span>';
+                        log('Payment link expired', 'error');
+                    }
+                } catch (e) {
+                    // Ignore polling errors
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
+"""
+    return HTMLResponse(content=page, status_code=200)
+
+
 def _serve_dashboard():
     """Read and return the dashboard HTML file on every request."""
     candidates = [
