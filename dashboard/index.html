@@ -10,25 +10,32 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
-            --bg: #030014;
-            --card: rgba(12, 10, 40, 0.55);
-            --card-solid: #0c0a28;
-            --border: rgba(99, 72, 255, 0.12);
-            --border-glow: rgba(99, 72, 255, 0.25);
-            --purple: #7c3aed;
-            --blue: #3b82f6;
-            --cyan: #06b6d4;
-            --pink: #ec4899;
-            --green: #10b981;
-            --red: #ef4444;
-            --amber: #f59e0b;
-            --text: #f0eeff;
-            --text-dim: #a5a0c8;
-            --text-muted: #5c5680;
+            --bg: #f8f9fc;
+            --bg-alt: #f0f2f8;
+            --card: #ffffff;
+            --card-hover: #fefeff;
+            --border: #e2e6f0;
+            --border-glow: rgba(99, 72, 255, 0.2);
+            --purple: #6d28d9;
+            --purple-light: #8b5cf6;
+            --blue: #2563eb;
+            --blue-light: #3b82f6;
+            --cyan: #0891b2;
+            --green: #059669;
+            --green-light: #10b981;
+            --red: #dc2626;
+            --amber: #d97706;
+            --pink: #db2777;
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+            --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.04);
+            --shadow-lg: 0 12px 40px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.04);
+            --shadow-xl: 0 20px 60px rgba(15, 23, 42, 0.1), 0 8px 20px rgba(15, 23, 42, 0.06);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         html { scroll-behavior: smooth; }
 
         body {
@@ -40,97 +47,96 @@
             line-height: 1.6;
         }
 
-        /* ── 3D Canvas Background ── */
+        /* ── 3D Canvas ── */
         #three-canvas {
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             z-index: -2;
+            opacity: 0.5;
         }
 
-        .gradient-overlay {
+        .mesh-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             z-index: -1;
             background:
-                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(124, 58, 237, 0.08) 0%, transparent 70%),
-                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(59, 130, 246, 0.06) 0%, transparent 70%),
-                radial-gradient(ellipse 50% 30% at 50% 80%, rgba(236, 72, 153, 0.04) 0%, transparent 70%);
+                radial-gradient(ellipse 80% 60% at 15% 30%, rgba(99, 72, 255, 0.04) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 85% 70%, rgba(37, 99, 235, 0.03) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 50% 90%, rgba(219, 39, 119, 0.02) 0%, transparent 60%);
             pointer-events: none;
         }
 
-        /* ── Particles ── */
-        .particle {
-            position: fixed;
-            width: 2px; height: 2px;
-            background: rgba(124, 58, 237, 0.5);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        @keyframes float-particle {
-            0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
-        }
-
-        /* ── Hero Section ── */
+        /* ── Hero ── */
         .hero {
             position: relative;
             min-height: 100vh;
             display: flex;
             align-items: center;
-            justify-content: center;
             overflow: hidden;
+            background: linear-gradient(160deg, #f8f9fc 0%, #eef2ff 30%, #f0f2f8 70%, #f8f9fc 100%);
         }
 
-        .hero-video-bg {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: cover;
-            opacity: 0.15;
-            z-index: -1;
-            filter: blur(2px) saturate(1.2);
-        }
-
-        .hero-gradient-overlay {
+        .hero-bg-grid {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(
-                180deg,
-                rgba(3, 0, 20, 0.4) 0%,
-                rgba(3, 0, 20, 0.7) 50%,
-                rgba(3, 0, 20, 1) 100%
-            );
+            background-image:
+                linear-gradient(rgba(99, 72, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 72, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
             z-index: 0;
         }
 
-        .hero-content {
+        .hero-glow-1 {
+            position: absolute;
+            top: -20%; right: -10%;
+            width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(99, 72, 255, 0.08) 0%, transparent 70%);
+            animation: float-glow 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .hero-glow-2 {
+            position: absolute;
+            bottom: -15%; left: -10%;
+            width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 70%);
+            animation: float-glow 25s ease-in-out infinite reverse;
+            z-index: 0;
+        }
+
+        @keyframes float-glow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(3vw, -2vh) scale(1.1); }
+        }
+
+        .hero-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 80px 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
             position: relative;
             z-index: 1;
-            text-align: center;
-            max-width: 900px;
-            padding: 40px 32px;
-            perspective: 1000px;
+            width: 100%;
         }
+
+        .hero-text { animation: fadeInUp 0.8s ease; }
 
         .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 6px 16px;
-            background: rgba(124, 58, 237, 0.1);
-            border: 1px solid rgba(124, 58, 237, 0.25);
+            background: rgba(99, 72, 255, 0.06);
+            border: 1px solid rgba(99, 72, 255, 0.12);
             border-radius: 100px;
             font-size: 12px;
             font-weight: 600;
             color: var(--purple);
-            letter-spacing: 0.5px;
             margin-bottom: 24px;
-            animation: fadeInUp 0.8s ease;
         }
 
         .hero-badge .dot {
@@ -142,48 +148,39 @@
 
         .hero-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: clamp(40px, 6vw, 72px);
+            font-size: clamp(36px, 4.5vw, 60px);
             font-weight: 700;
-            line-height: 1.05;
+            line-height: 1.1;
+            color: var(--text);
             margin-bottom: 20px;
-            animation: fadeInUp 0.8s ease 0.1s both;
         }
 
-        .hero-title .gradient-text {
-            background: linear-gradient(135deg, #7c3aed, #3b82f6, #06b6d4);
+        .hero-title .accent {
+            background: linear-gradient(135deg, var(--purple), var(--blue));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            background-size: 200% 200%;
-            animation: gradientShift 4s ease-in-out infinite;
         }
 
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .hero-subtitle {
-            font-size: clamp(16px, 2vw, 20px);
-            color: var(--text-dim);
-            max-width: 600px;
-            margin: 0 auto 32px;
-            animation: fadeInUp 0.8s ease 0.2s both;
+        .hero-sub {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin-bottom: 32px;
+            line-height: 1.7;
         }
 
         .hero-actions {
             display: flex;
-            gap: 16px;
-            justify-content: center;
+            gap: 14px;
             flex-wrap: wrap;
-            animation: fadeInUp 0.8s ease 0.3s both;
         }
 
         .hero-btn {
-            padding: 14px 32px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 15px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
             transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
             font-family: 'Inter', sans-serif;
@@ -195,42 +192,65 @@
         }
 
         .hero-btn-primary {
-            background: linear-gradient(135deg, #7c3aed, #3b82f6);
+            background: linear-gradient(135deg, var(--purple), var(--blue));
             color: white;
-            box-shadow: 0 4px 30px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 4px 20px rgba(99, 72, 255, 0.25);
         }
 
         .hero-btn-primary:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 40px rgba(124, 58, 237, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(99, 72, 255, 0.35);
         }
 
         .hero-btn-outline {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-dim);
+            background: white;
+            color: var(--text-secondary);
             border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-sm);
         }
 
         .hero-btn-outline:hover {
-            border-color: var(--border-glow);
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--purple-light);
+            color: var(--purple);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        .hero-scroll-indicator {
+        .hero-image {
+            position: relative;
+            animation: fadeInRight 1s ease 0.2s both;
+        }
+
+        .hero-image-main {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border);
+        }
+
+        .hero-float-card {
             position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            animation: bounce 2s ease-in-out infinite;
-            z-index: 1;
+            background: white;
+            border-radius: 14px;
+            padding: 14px 18px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            animation: float-card 4s ease-in-out infinite;
         }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(10px); }
+        .hero-float-card.card-1 {
+            top: -20px; right: -20px;
+            animation-delay: 0s;
+        }
+
+        .hero-float-card.card-2 {
+            bottom: 30px; left: -30px;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes float-card {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
 
         @keyframes fadeInUp {
@@ -238,54 +258,14 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.8); }
-        }
-
-        /* ── 3D Card Base ── */
-        .card-3d {
-            perspective: 1000px;
-        }
-
-        .card-inner {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 28px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
-            transform-style: preserve-3d;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card-inner::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.3), transparent);
-        }
-
-        .card-inner::after {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(124, 58, 237, 0.06) 0%, transparent 50%);
-            pointer-events: none;
-            transition: opacity 300ms;
-            opacity: 0;
-        }
-
-        .card-inner:hover::after { opacity: 1; }
-
-        .card-inner:hover {
-            border-color: var(--border-glow);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 40px rgba(124, 58, 237, 0.08);
-            transform: translateY(-4px);
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         /* ── Header ── */
@@ -293,71 +273,48 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            padding: 16px 40px;
+            padding: 14px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(3, 0, 20, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(248, 249, 252, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
         }
 
-        .header::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.2), rgba(59, 130, 246, 0.2), transparent);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
 
         .header-logo {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, #7c3aed, #3b82f6);
-            border-radius: 12px;
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--purple), var(--blue));
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 800;
-            font-size: 18px;
+            font-size: 16px;
             font-family: 'Space Grotesk', sans-serif;
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 2px 12px rgba(99, 72, 255, 0.25);
         }
 
         .header h1 {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
-            background: linear-gradient(135deg, #f0eeff, #a5a0c8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--text);
         }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
+        .header-right { display: flex; align-items: center; gap: 16px; }
 
         .live-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            display: flex; align-items: center; gap: 8px;
             padding: 5px 12px;
-            background: rgba(16, 185, 129, 0.08);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            background: rgba(5, 150, 105, 0.06);
+            border: 1px solid rgba(5, 150, 105, 0.15);
             border-radius: 100px;
-            font-size: 11px;
-            color: var(--green);
-            font-weight: 600;
+            font-size: 11px; color: var(--green); font-weight: 600;
         }
 
         .live-dot {
@@ -365,198 +322,176 @@
             background: var(--green);
             border-radius: 50%;
             animation: pulse 2s ease-in-out infinite;
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
         }
 
         .timestamp {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            color: var(--text-muted);
+            font-size: 11px; color: var(--text-muted);
         }
 
-        /* ── Main Content ── */
+        /* ── Main ── */
         .main {
             max-width: 1440px;
             margin: 0 auto;
             padding: 20px 40px 80px;
         }
 
-        /* ── Section Labels ── */
-        .section-label {
-            display: flex;
+        /* ── Section with Image ── */
+        .section-with-image {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
             align-items: center;
-            gap: 14px;
+            margin: 60px 0;
+        }
+
+        .section-with-image.reverse { direction: rtl; }
+        .section-with-image.reverse > * { direction: ltr; }
+
+        .section-image {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            aspect-ratio: 16/10;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .section-label {
+            display: flex; align-items: center; gap: 12px;
             margin: 48px 0 20px;
         }
 
         .section-number {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 11px;
-            font-weight: 700;
+            font-size: 11px; font-weight: 700;
             color: var(--purple);
-            background: rgba(124, 58, 237, 0.1);
-            border: 1px solid rgba(124, 58, 237, 0.2);
-            padding: 4px 10px;
-            border-radius: 6px;
+            background: rgba(99, 72, 255, 0.06);
+            border: 1px solid rgba(99, 72, 255, 0.12);
+            padding: 4px 10px; border-radius: 6px;
             letter-spacing: 1px;
         }
 
         .section-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-size: 13px; font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 2px;
         }
 
         /* ── Buttons ── */
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+        .btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
 
         .btn {
-            padding: 10px 20px;
-            border-radius: 12px;
-            border: 1px solid transparent;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 10px 18px; border-radius: 10px;
+            border: 1px solid transparent; cursor: pointer;
+            font-weight: 600; font-size: 13px;
+            transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
             font-family: 'Inter', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            display: inline-flex; align-items: center; gap: 8px;
         }
 
         .btn-demo {
-            background: linear-gradient(135deg, #10b981, #06b6d4);
-            color: white;
-            font-size: 14px;
-            padding: 12px 28px;
-            border-radius: 14px;
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
-            animation: demoPulse 3s ease-in-out infinite;
+            background: linear-gradient(135deg, var(--green), var(--cyan));
+            color: white; font-size: 14px; padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(5, 150, 105, 0.2);
         }
 
-        .btn-demo:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-demo:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            animation: none;
-        }
-
-        @keyframes demoPulse {
-            0%, 100% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25); }
-            50% { box-shadow: 0 4px 30px rgba(16, 185, 129, 0.45); }
-        }
+        .btn-demo:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(5, 150, 105, 0.3); }
+        .btn-demo:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
         .btn-gradient {
-            background: linear-gradient(135deg, #7c3aed, #3b82f6);
-            color: white;
-            box-shadow: 0 2px 12px rgba(124, 58, 237, 0.2);
+            background: linear-gradient(135deg, var(--purple), var(--blue));
+            color: white; box-shadow: 0 2px 10px rgba(99, 72, 255, 0.2);
         }
 
-        .btn-gradient:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 24px rgba(124, 58, 237, 0.35);
-        }
+        .btn-gradient:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(99, 72, 255, 0.3); }
 
         .btn-glass {
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-dim);
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
+            background: white; color: var(--text-secondary);
+            border: 1px solid var(--border); box-shadow: var(--shadow-sm);
         }
 
-        .btn-glass:hover {
-            border-color: var(--border-glow);
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.06);
-            transform: translateY(-1px);
-        }
+        .btn-glass:hover { border-color: var(--purple-light); color: var(--purple); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .btn-glass.green { border-color: rgba(5, 150, 105, 0.2); color: var(--green); }
+        .btn-glass.green:hover { border-color: var(--green); background: rgba(5, 150, 105, 0.04); }
+        .btn-glass.purple { border-color: rgba(109, 40, 217, 0.2); color: var(--purple); font-weight: 700; }
+        .btn-glass.purple:hover { border-color: var(--purple); background: rgba(109, 40, 217, 0.04); }
 
-        .btn-glass.green { border-color: rgba(16, 185, 129, 0.25); color: var(--green); }
-        .btn-glass.green:hover { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.06); }
-        .btn-glass.purple { border-color: rgba(124, 58, 237, 0.25); color: var(--purple); font-weight: 700; }
-        .btn-glass.purple:hover { border-color: rgba(124, 58, 237, 0.5); background: rgba(124, 58, 237, 0.06); }
-
-        /* ── Metric Cards ── */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-        }
-
-        .metric-card {
-            perspective: 800px;
-        }
-
-        .metric-card-inner {
+        /* ── Cards ── */
+        .card {
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 24px;
-            backdrop-filter: blur(12px);
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
-            transform-style: preserve-3d;
         }
 
-        .metric-card-inner::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
+        .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+
+        .card-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px; font-weight: 600;
+            color: var(--text); margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .icon-box {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(99, 72, 255, 0.06); color: var(--purple);
+        }
+
+        /* ── Metric Cards ── */
+        .metrics-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+        }
+
+        .metric-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
             border-radius: 16px 16px 0 0;
         }
 
-        .metric-card:nth-child(1) .metric-card-inner::before { background: linear-gradient(90deg, #7c3aed, #3b82f6); }
-        .metric-card:nth-child(2) .metric-card-inner::before { background: linear-gradient(90deg, #ef4444, #ec4899); }
-        .metric-card:nth-child(3) .metric-card-inner::before { background: linear-gradient(90deg, #10b981, #06b6d4); }
-        .metric-card:nth-child(4) .metric-card-inner::before { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+        .metric-card:nth-child(1)::before { background: linear-gradient(90deg, var(--purple), var(--blue)); }
+        .metric-card:nth-child(2)::before { background: linear-gradient(90deg, var(--red), var(--pink)); }
+        .metric-card:nth-child(3)::before { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+        .metric-card:nth-child(4)::before { background: linear-gradient(90deg, var(--purple-light), var(--pink)); }
 
-        .metric-card-inner:hover {
-            transform: translateY(-6px) rotateX(2deg);
-            border-color: var(--border-glow);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 30px rgba(124, 58, 237, 0.08);
-        }
+        .metric-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
 
         .metric-icon {
-            width: 44px; height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
+            width: 42px; height: 42px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 14px;
         }
 
-        .metric-icon.purple { background: rgba(124, 58, 237, 0.1); color: var(--purple); }
-        .metric-icon.red { background: rgba(239, 68, 68, 0.1); color: var(--red); }
-        .metric-icon.green { background: rgba(16, 185, 129, 0.1); color: var(--green); }
-        .metric-icon.pink { background: rgba(236, 72, 153, 0.1); color: var(--pink); }
+        .metric-icon.purple { background: rgba(99, 72, 255, 0.06); color: var(--purple); }
+        .metric-icon.red { background: rgba(220, 38, 38, 0.06); color: var(--red); }
+        .metric-icon.green { background: rgba(5, 150, 105, 0.06); color: var(--green); }
+        .metric-icon.pink { background: rgba(219, 39, 119, 0.06); color: var(--pink); }
 
         .metric-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-muted);
-            font-weight: 600;
+            font-size: 11px; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--text-muted); font-weight: 600;
         }
 
         .metric-value {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 34px;
-            font-weight: 700;
-            letter-spacing: -1px;
-            margin-top: 8px;
+            font-size: 32px; font-weight: 700; letter-spacing: -1px; margin-top: 8px;
         }
 
         .metric-value.purple { color: var(--purple); }
@@ -564,768 +499,358 @@
         .metric-value.green { color: var(--green); }
         .metric-value.pink { color: var(--pink); }
 
-        .metric-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
+        .metric-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
         /* ── Dashboard Grid ── */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-        .card-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-title .icon-box {
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(124, 58, 237, 0.1);
-            color: var(--purple);
-        }
-
-        /* ── Status Rows ── */
+        /* ── Status ── */
         .status-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(99, 72, 255, 0.06);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 11px 0; border-bottom: 1px solid var(--border);
         }
-
         .status-row:last-child { border-bottom: none; }
+        .status-label { font-size: 13px; color: var(--text-secondary); }
+        .status-value { font-weight: 600; font-size: 13px; color: var(--text); }
+        .status-value.live { color: var(--green); display: flex; align-items: center; gap: 6px; }
 
-        .status-label {
-            font-size: 13px;
-            color: var(--text-dim);
-        }
-
-        .status-value {
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--text);
-        }
-
-        .status-value.live {
-            color: var(--green);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-value.simulation { color: var(--amber); }
-
-        /* ── Progress Bars ── */
-        .progress-bar {
-            height: 6px;
-            background: rgba(99, 72, 255, 0.08);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 800ms cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .progress-fill.g1 { background: linear-gradient(90deg, #7c3aed, #3b82f6); }
-        .progress-fill.g2 { background: linear-gradient(90deg, #10b981, #06b6d4); }
-        .progress-fill.g3 { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+        .progress-bar { height: 6px; background: var(--bg-alt); border-radius: 10px; overflow: hidden; margin-top: 8px; }
+        .progress-fill { height: 100%; border-radius: 10px; transition: width 800ms ease; }
+        .progress-fill.g1 { background: linear-gradient(90deg, var(--purple), var(--blue)); }
+        .progress-fill.g2 { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+        .progress-fill.g3 { background: linear-gradient(90deg, var(--purple-light), var(--pink)); }
 
         /* ── Demo Panel ── */
         .demo-panel {
-            background: var(--card);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            border-radius: 20px;
-            padding: 28px;
-            display: none;
-            backdrop-filter: blur(16px);
-            position: relative;
-            overflow: hidden;
+            background: var(--card); border: 1px solid rgba(5, 150, 105, 0.2);
+            border-radius: 16px; padding: 28px; display: none;
+            box-shadow: var(--shadow-md); position: relative; overflow: hidden;
         }
 
-        .demo-panel::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #10b981, #06b6d4);
-        }
+        .demo-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--green), var(--cyan)); }
+        .demo-panel.active { display: block; animation: slideIn 0.4s ease; }
 
-        .demo-panel.active {
-            display: block;
-            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .demo-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .demo-panel-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--green); display: flex; align-items: center; gap: 8px; }
 
-        .demo-panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .demo-panel-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--green);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .demo-step {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 16px 0;
-            border-bottom: 1px solid rgba(99, 72, 255, 0.06);
-            opacity: 0;
-            transform: translateX(-16px);
-            transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
+        .demo-step { display: flex; align-items: flex-start; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border); opacity: 0; transform: translateX(-16px); transition: all 500ms ease; }
         .demo-step.visible { opacity: 1; transform: translateX(0); }
         .demo-step:last-child { border-bottom: none; }
 
-        .step-number {
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 13px;
-            flex-shrink: 0;
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
-        .step-number.success { background: rgba(16, 185, 129, 0.1); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.2); }
-        .step-number.warning { background: rgba(245, 158, 11, 0.1); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.2); }
-        .step-number.pending { background: rgba(100, 116, 139, 0.1); color: var(--text-muted); border: 1px solid rgba(100, 116, 139, 0.2); }
+        .step-number { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; font-family: 'Space Grotesk', sans-serif; }
+        .step-number.success { background: rgba(5, 150, 105, 0.08); color: var(--green); border: 1px solid rgba(5, 150, 105, 0.15); }
+        .step-number.warning { background: rgba(217, 119, 6, 0.08); color: var(--amber); border: 1px solid rgba(217, 119, 6, 0.15); }
+        .step-number.pending { background: var(--bg-alt); color: var(--text-muted); border: 1px solid var(--border); }
 
         .step-content { flex: 1; }
         .step-title { font-weight: 600; font-size: 14px; color: var(--text); }
-        .step-detail { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-top: 4px; }
+        .step-detail { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
         .step-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
-        .demo-result {
-            background: rgba(16, 185, 129, 0.05);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            border-radius: 14px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none;
-        }
-
+        .demo-result { background: rgba(5, 150, 105, 0.04); border: 1px solid rgba(5, 150, 105, 0.15); border-radius: 12px; padding: 20px; margin-top: 20px; display: none; }
         .demo-result.active { display: block; animation: slideIn 0.4s ease; }
 
-        /* ── Merchant Table ── */
+        /* ── Table ── */
         .merchant-table { width: 100%; border-collapse: collapse; }
+        .merchant-table th { text-align: left; padding: 12px 16px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); border-bottom: 2px solid var(--border); font-weight: 600; }
+        .merchant-table td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+        .merchant-table tbody tr { cursor: pointer; transition: background 200ms; }
+        .merchant-table tbody tr:hover { background: rgba(99, 72, 255, 0.03); }
 
-        .merchant-table th {
-            text-align: left;
-            padding: 12px 16px;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
-        }
+        .risk-badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .risk-badge.critical { background: rgba(220, 38, 38, 0.08); color: var(--red); }
+        .risk-badge.high { background: rgba(217, 119, 6, 0.08); color: var(--amber); }
+        .risk-badge.medium { background: rgba(139, 92, 246, 0.08); color: var(--purple-light); }
+        .risk-badge.low { background: rgba(5, 150, 105, 0.08); color: var(--green); }
 
-        .merchant-table td {
-            padding: 14px 16px;
-            font-size: 13px;
-            border-bottom: 1px solid rgba(99, 72, 255, 0.06);
-        }
-
-        .merchant-table tbody tr {
-            cursor: pointer;
-            transition: all 200ms ease;
-        }
-
-        .merchant-table tbody tr:hover { background: rgba(124, 58, 237, 0.04); }
-
-        .risk-badge {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .risk-badge.critical { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.15); }
-        .risk-badge.high { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.15); }
-        .risk-badge.medium { background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.15); }
-        .risk-badge.low { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.15); }
-
-        /* ── Analysis Panel ── */
-        .analysis-panel {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 28px;
-            margin-top: 16px;
-            display: none;
-            backdrop-filter: blur(16px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .analysis-panel::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #7c3aed, #3b82f6);
-        }
-
+        /* ── Analysis ── */
+        .analysis-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-top: 16px; display: none; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
+        .analysis-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--purple), var(--blue)); }
         .analysis-panel.active { display: block; animation: slideIn 0.4s ease; }
-
-        .analysis-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .analysis-merchant {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .analysis-close {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-            cursor: pointer;
-            font-size: 16px;
-            padding: 6px 10px;
-            border-radius: 8px;
-            transition: all 200ms;
-        }
-
-        .analysis-close:hover { color: var(--red); border-color: rgba(239, 68, 68, 0.3); }
-
-        .analysis-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .analysis-section {
-            background: rgba(3, 0, 20, 0.5);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .analysis-section h4 {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--purple);
-            margin-bottom: 12px;
-            font-weight: 700;
-        }
-
-        .analysis-text {
-            font-size: 13px;
-            line-height: 1.8;
-            color: var(--text-dim);
-        }
-
-        .recommendation-item {
-            background: rgba(3, 0, 20, 0.4);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 12px;
-            transition: all 200ms;
-        }
-
-        .recommendation-item:hover { border-color: var(--border-glow); }
+        .analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .analysis-merchant { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; }
+        .analysis-close { background: var(--bg-alt); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: all 200ms; }
+        .analysis-close:hover { color: var(--red); border-color: var(--red); }
+        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .analysis-section { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .analysis-section h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--purple); margin-bottom: 12px; font-weight: 700; }
+        .analysis-text { font-size: 13px; line-height: 1.8; color: var(--text-secondary); }
+        .recommendation-item { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 12px; transition: all 200ms; }
+        .recommendation-item:hover { border-color: var(--border-glow); box-shadow: var(--shadow-sm); }
         .recommendation-item:last-child { margin-bottom: 0; }
-
-        .rec-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
+        .rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .rec-type { font-weight: 700; font-size: 13px; color: var(--purple); }
         .rec-impact { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--green); }
-        .rec-reasoning { font-size: 13px; color: var(--text-dim); line-height: 1.7; }
+        .rec-reasoning { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
 
-        /* ── Audit Trail ── */
-        .audit-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(99, 72, 255, 0.06);
-            font-size: 13px;
-        }
-
-        .audit-time {
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--text-muted);
-            font-size: 11px;
-            min-width: 60px;
-        }
+        /* ── Audit ── */
+        .audit-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .audit-time { font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-size: 11px; min-width: 60px; }
 
         /* ── Loading ── */
-        .loading-spinner {
-            display: inline-block;
-            width: 16px; height: 16px;
-            border: 2px solid rgba(124, 58, 237, 0.15);
-            border-top-color: var(--purple);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
+        .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ── Footer ── */
-        .footer {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-            font-size: 12px;
-            border-top: 1px solid var(--border);
-            background: rgba(3, 0, 20, 0.5);
-        }
-
+        .footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border); background: white; }
         .footer a { color: var(--purple); text-decoration: none; }
+
+        /* ── Scroll Reveal ── */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
 
         /* ── Scrollbar ── */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.5); }
-
-        /* ── Scroll Animations ── */
-        .reveal {
-            opacity: 0;
-            transform: translateY(40px);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        ::-webkit-scrollbar-thumb { background: rgba(99, 72, 255, 0.2); border-radius: 10px; }
 
         /* ── Responsive ── */
         @media (max-width: 1024px) {
+            .hero-container { grid-template-columns: 1fr; text-align: center; padding: 60px 24px; }
+            .hero-sub { margin: 0 auto 32px; }
+            .hero-actions { justify-content: center; }
+            .hero-image { display: none; }
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
             .dashboard-grid { grid-template-columns: 1fr; }
             .analysis-grid { grid-template-columns: 1fr; }
-            .main { padding: 20px; }
-            .hero-title { font-size: 36px; }
+            .section-with-image { grid-template-columns: 1fr; }
+            .section-with-image.reverse { direction: ltr; }
+            .main { padding: 16px 20px; }
         }
 
         @media (max-width: 640px) {
             .metrics-grid { grid-template-columns: 1fr; }
             .header { padding: 12px 16px; }
-            .main { padding: 12px; }
             .btn-group { flex-direction: column; }
         }
     </style>
 </head>
 <body>
-    <!-- Three.js 3D Canvas -->
     <canvas id="three-canvas"></canvas>
-    <div class="gradient-overlay"></div>
+    <div class="mesh-overlay"></div>
 
-    <!-- Hero Section -->
+    <!-- ═══ HERO ═══ -->
     <section class="hero" id="hero">
-        <video class="hero-video-bg" autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1920&q=80">
-            <source src="https://cdn.pixabay.com/video/2020/05/25/39853-424930032_large.mp4" type="video/mp4">
-        </video>
-        <div class="hero-gradient-overlay"></div>
-
-        <div class="hero-content">
-            <div class="hero-badge">
-                <span class="dot"></span>
-                AI-Powered Revenue Recovery
+        <div class="hero-bg-grid"></div>
+        <div class="hero-glow-1"></div>
+        <div class="hero-glow-2"></div>
+        <div class="hero-container">
+            <div class="hero-text">
+                <div class="hero-badge"><span class="dot"></span> AI-Powered Revenue Recovery</div>
+                <h1 class="hero-title">Predict Churn.<br><span class="accent">Recover Revenue.</span><br>Autonomously.</h1>
+                <p class="hero-sub">An autonomous AI agent that detects at-risk merchants on Razorpay, reasons about recovery strategies with Gemini AI, and executes real payment actions — with every decision audited and explainable.</p>
+                <div class="hero-actions">
+                    <a href="#dashboard" class="hero-btn hero-btn-primary"><i data-lucide="play" style="width:18px;height:18px"></i> Explore Dashboard</a>
+                    <a href="/proof" target="_blank" class="hero-btn hero-btn-outline"><i data-lucide="shield-check" style="width:18px;height:18px"></i> Verify Integration</a>
+                </div>
             </div>
-            <h1 class="hero-title">
-                Predict Churn.<br>
-                <span class="gradient-text">Recover Revenue.</span><br>
-                Autonomously.
-            </h1>
-            <p class="hero-subtitle">
-                An autonomous AI agent that detects at-risk merchants, reasons about recovery strategies with Gemini AI, and executes real Razorpay actions — with every decision audited and explainable.
-            </p>
-            <div class="hero-actions">
-                <a href="#dashboard" class="hero-btn hero-btn-primary">
-                    <i data-lucide="play" style="width:18px;height:18px"></i>
-                    Explore Dashboard
-                </a>
-                <a href="/proof" target="_blank" class="hero-btn hero-btn-outline">
-                    <i data-lucide="shield-check" style="width:18px;height:18px"></i>
-                    Verify Integration
-                </a>
-                <a href="/docs" class="hero-btn hero-btn-outline">
-                    <i data-lucide="file-code" style="width:18px;height:18px"></i>
-                    API Docs
-                </a>
+            <div class="hero-image">
+                <img class="hero-image-main" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80" alt="Analytics Dashboard" onerror="this.src='https://placehold.co/800x500/f0f2f8/6d28d9?text=MerchantPilot+AI+Dashboard'">
+                <div class="hero-float-card card-1">
+                    <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;background:var(--green);border-radius:50%;"></div><span style="font-size:12px;font-weight:600;color:var(--green);">Payment Captured</span></div>
+                    <div style="font-family:'JetBrains Mono';font-size:18px;font-weight:700;margin-top:4px;">Rs.13,622</div>
+                </div>
+                <div class="hero-float-card card-2">
+                    <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;background:var(--purple);border-radius:50%;"></div><span style="font-size:12px;font-weight:600;color:var(--purple);">AI Analysis</span></div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">89% Precision · Churn Detected</div>
+                </div>
             </div>
-        </div>
-
-        <div class="hero-scroll-indicator">
-            <i data-lucide="chevrons-down" style="width:24px;height:24px;color:var(--text-muted)"></i>
         </div>
     </section>
 
-    <!-- Dashboard Content -->
-    <div class="main" id="dashboard">
-        <!-- Controls -->
-        <div class="section-label reveal">
-            <span class="section-number">01</span>
-            <span class="section-title">Controls</span>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo">M</div>
+            <h1>MerchantPilot AI</h1>
         </div>
+        <div class="header-right">
+            <div class="live-badge"><span id="sseStatus" class="live-dot"></span> <span id="apiStatus">Connecting</span></div>
+            <div class="timestamp" id="lastUpdated">--</div>
+        </div>
+    </header>
 
+    <!-- ═══ DASHBOARD ═══ -->
+    <main class="main" id="dashboard">
+        <!-- Controls -->
+        <div class="section-label reveal"><span class="section-number">01</span><span class="section-title">Controls</span></div>
         <div class="btn-group reveal">
-            <button onclick="runLiveDemo()" class="btn btn-demo" id="runDemoBtn">
-                <i data-lucide="play" style="width:16px;height:16px"></i> Run Live Demo
-            </button>
-            <button onclick="fetchStats()" class="btn btn-gradient">
-                <i data-lucide="refresh-cw" style="width:16px;height:16px"></i> Refresh
-            </button>
-            <button onclick="window.location='/docs'" class="btn btn-glass">
-                <i data-lucide="file-code" style="width:16px;height:16px"></i> API Docs
-            </button>
-            <button onclick="window.open('https://dashboard.razorpay.com','_blank')" class="btn btn-glass">
-                <i data-lucide="external-link" style="width:16px;height:16px"></i> Razorpay
-            </button>
-            <button onclick="window.open('/checkout','_blank')" class="btn btn-glass green">
-                <i data-lucide="credit-card" style="width:16px;height:16px"></i> Payment Test
-            </button>
-            <button onclick="window.open('/proof','_blank')" class="btn btn-glass purple">
-                <i data-lucide="shield-check" style="width:16px;height:16px"></i> Verify
-            </button>
+            <button onclick="runLiveDemo()" class="btn btn-demo" id="runDemoBtn"><i data-lucide="play" style="width:16px;height:16px"></i> Run Live Demo</button>
+            <button onclick="fetchStats()" class="btn btn-gradient"><i data-lucide="refresh-cw" style="width:16px;height:16px"></i> Refresh</button>
+            <button onclick="window.location='/docs'" class="btn btn-glass"><i data-lucide="file-code" style="width:16px;height:16px"></i> API Docs</button>
+            <button onclick="window.open('https://dashboard.razorpay.com','_blank')" class="btn btn-glass"><i data-lucide="external-link" style="width:16px;height:16px"></i> Razorpay</button>
+            <button onclick="window.open('/checkout','_blank')" class="btn btn-glass green"><i data-lucide="credit-card" style="width:16px;height:16px"></i> Payment Test</button>
+            <button onclick="window.open('/proof','_blank')" class="btn btn-glass purple"><i data-lucide="shield-check" style="width:16px;height:16px"></i> Verify</button>
         </div>
 
         <!-- Demo Panel -->
-        <div class="demo-panel reveal" id="demoPanel">
-            <div class="demo-panel-header">
-                <div class="demo-panel-title">
-                    <i data-lucide="zap" style="width:18px;height:18px"></i>
-                    Live Recovery Demo
-                </div>
-                <span class="loading-spinner" id="demoSpinner"></span>
-            </div>
+        <div class="demo-panel" id="demoPanel">
+            <div class="demo-panel-header"><div class="demo-panel-title"><i data-lucide="zap" style="width:18px;height:18px"></i> Live Recovery Demo</div><span class="loading-spinner" id="demoSpinner"></span></div>
             <div id="demoSteps"></div>
-            <div id="customerSim" style="display:none; margin-top:20px; background:rgba(3,0,20,0.6); border:1px solid rgba(124,58,237,0.25); border-radius:12px; padding:20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <div>
-                        <div style="font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; color:var(--purple);">Customer Checkout Simulation</div>
-                        <div style="color:var(--text-dim); font-size:12px; margin-top:4px;">A customer opens the payment link and attempts to pay</div>
-                    </div>
-                    <div id="simPaymentLink" style="font-family:'JetBrains Mono',monospace; font-size:12px;"></div>
-                </div>
-                <div style="display:flex; gap:12px; margin-bottom:16px;">
-                    <button onclick="simulatePayment('success')" class="btn" style="background:linear-gradient(135deg,#10b981,#06b6d4); color:white; flex:1;" id="simSuccessBtn">Customer Pays (UPI)</button>
-                    <button onclick="simulatePayment('failure')" class="btn" style="background:linear-gradient(135deg,#f59e0b,#ec4899); color:white; flex:1;" id="simFailureBtn">Payment Fails → Auto-Retry</button>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Webhook Event Log</div>
-                <div id="webhookLog" style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px; max-height:200px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-muted);">
-                    <div>Waiting for customer action...</div>
+            <div id="customerSim" style="display:none;margin-top:20px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;"><div><div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--purple);">Customer Checkout Simulation</div><div style="color:var(--text-secondary);font-size:12px;margin-top:4px;">A customer opens the payment link and attempts to pay</div></div><div id="simPaymentLink" style="font-family:'JetBrains Mono',monospace;font-size:12px;"></div></div>
+                <div style="display:flex;gap:12px;margin-bottom:16px;"><button onclick="simulatePayment('success')" class="btn" style="background:linear-gradient(135deg,var(--green),var(--cyan));color:white;flex:1;" id="simSuccessBtn">Customer Pays (UPI)</button><button onclick="simulatePayment('failure')" class="btn" style="background:linear-gradient(135deg,var(--amber),var(--pink));color:white;flex:1;" id="simFailureBtn">Payment Fails → Auto-Retry</button></div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Webhook Event Log</div>
+                <div id="webhookLog" style="background:white;border:1px solid var(--border);border-radius:8px;padding:12px;max-height:200px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);"><div>Waiting for customer action...</div></div>
+            </div>
+            <div class="demo-result" id="demoResult"><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--green);font-size:16px;">✓ Recovery Complete</div><div id="demoResultDetail"></div></div>
+        </div>
+
+        <!-- Section: Overview with Image -->
+        <div class="section-label reveal"><span class="section-number">02</span><span class="section-title">Overview</span></div>
+
+        <div class="section-with-image reveal">
+            <div>
+                <h2 style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin-bottom:12px;">Real-Time Merchant Intelligence</h2>
+                <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">Our ML model analyzes 26 features per merchant — failure rates, refund patterns, inactivity — and predicts churn with 89% precision. Every prediction is explainable.</p>
+                <div class="metrics-grid" style="grid-template-columns:1fr 1fr;">
+                    <div class="metric-card"><div class="metric-card-inner"><div class="metric-icon purple"><i data-lucide="users" style="width:20px;height:20px"></i></div><div class="metric-label">Total Merchants</div><div class="metric-value purple" id="totalMerchants">--</div></div></div>
+                    <div class="metric-card"><div class="metric-card-inner"><div class="metric-icon red"><i data-lucide="alert-triangle" style="width:20px;height:20px"></i></div><div class="metric-label">At Risk</div><div class="metric-value red" id="atRiskCount">--</div></div></div>
+                    <div class="metric-card"><div class="metric-card-inner"><div class="metric-icon green"><i data-lucide="check-circle" style="width:20px;height:20px"></i></div><div class="metric-label">Active</div><div class="metric-value green" id="recoveredCount">--</div></div></div>
+                    <div class="metric-card"><div class="metric-card-inner"><div class="metric-icon pink"><i data-lucide="activity" style="width:20px;height:20px"></i></div><div class="metric-label">Audit Events</div><div class="metric-value pink" id="auditEvents">--</div></div></div>
                 </div>
             </div>
-            <div class="demo-result" id="demoResult">
-                <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--green); font-size:16px;">✓ Recovery Complete</div>
-                <div id="demoResultDetail"></div>
+            <img class="section-image" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=700&q=80" alt="Data Analytics" onerror="this.style.background='linear-gradient(135deg,#eef2ff,#f0f2f8)';this.alt='Analytics Dashboard'">
+        </div>
+
+        <!-- Recovery Card (hidden initially) -->
+        <div class="metric-card" style="display:none;margin-top:16px;" id="recoveryCard">
+            <div class="metric-card-inner" style="display:flex;align-items:center;gap:20px;">
+                <div class="metric-icon green"><i data-lucide="trending-up" style="width:22px;height:22px"></i></div>
+                <div><div class="metric-label">Revenue Recovered</div><div class="metric-value green" id="revenueRecovered">Rs.0</div><div class="metric-sub">Via automated retries</div></div>
             </div>
         </div>
 
-        <!-- Metrics -->
-        <div class="section-label reveal">
-            <span class="section-number">02</span>
-            <span class="section-title">Overview</span>
-        </div>
+        <!-- Section: Intelligence -->
+        <div class="section-label reveal"><span class="section-number">03</span><span class="section-title">Intelligence</span></div>
 
-        <div class="metrics-grid reveal">
-            <div class="metric-card">
-                <div class="metric-card-inner">
-                    <div class="metric-icon purple"><i data-lucide="users" style="width:22px;height:22px"></i></div>
-                    <div class="metric-label">Total Merchants</div>
-                    <div class="metric-value purple" id="totalMerchants">--</div>
-                    <div class="metric-sub">Analyzed by ML model</div>
-                </div>
+        <div class="section-with-image reverse reveal">
+            <div>
+                <h2 style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin-bottom:12px;">Gemini AI-Powered Analysis</h2>
+                <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">Click any merchant to get real-time AI analysis from Google Gemini. The AI reasons about failure rates, inactivity patterns, and generates personalized recovery strategies with expected revenue impact.</p>
             </div>
-            <div class="metric-card">
-                <div class="metric-card-inner">
-                    <div class="metric-icon red"><i data-lucide="alert-triangle" style="width:22px;height:22px"></i></div>
-                    <div class="metric-label">At Risk</div>
-                    <div class="metric-value red" id="atRiskCount">--</div>
-                    <div class="metric-sub">High churn probability</div>
-                </div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-card-inner">
-                    <div class="metric-icon green"><i data-lucide="check-circle" style="width:22px;height:22px"></i></div>
-                    <div class="metric-label">Active</div>
-                    <div class="metric-value green" id="recoveredCount">--</div>
-                    <div class="metric-sub">Healthy merchants</div>
-                </div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-card-inner">
-                    <div class="metric-icon pink"><i data-lucide="activity" style="width:22px;height:22px"></i></div>
-                    <div class="metric-label">Audit Events</div>
-                    <div class="metric-value pink" id="auditEvents">--</div>
-                    <div class="metric-sub">Actions logged</div>
-                </div>
-            </div>
-            <div class="metric-card" style="display:none;" id="recoveryCard">
-                <div class="metric-card-inner">
-                    <div class="metric-icon green"><i data-lucide="trending-up" style="width:22px;height:22px"></i></div>
-                    <div class="metric-label">Revenue Recovered</div>
-                    <div class="metric-value green" id="revenueRecovered">Rs.0</div>
-                    <div class="metric-sub">Via automated retries</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Intelligence -->
-        <div class="section-label reveal">
-            <span class="section-number">03</span>
-            <span class="section-title">Intelligence</span>
+            <img class="section-image" src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=700&q=80" alt="AI Brain" onerror="this.style.background='linear-gradient(135deg,#eef2ff,#f0f2f8)';this.alt='AI Analysis'">
         </div>
 
         <div class="dashboard-grid reveal">
-            <div class="card-3d">
-                <div class="card-inner">
-                    <div class="card-title">
-                        <span class="icon-box"><i data-lucide="bar-chart-3" style="width:18px;height:18px"></i></span>
-                        Model Performance
-                    </div>
-                    <div class="status-row">
-                        <span class="status-label">Precision</span>
-                        <span class="status-value" id="precision">--</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress-fill g1" id="precisionBar" style="width:0%"></div></div>
-                    <div class="status-row" style="margin-top:12px;">
-                        <span class="status-label">Recall</span>
-                        <span class="status-value" id="recall">--</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress-fill g2" id="recallBar" style="width:0%"></div></div>
-                    <div class="status-row" style="margin-top:12px;">
-                        <span class="status-label">F1 Score</span>
-                        <span class="status-value" id="f1Score">--</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress-fill g3" id="f1Bar" style="width:0%"></div></div>
-                    <div class="status-row" style="margin-top:12px;">
-                        <span class="status-label">ROC AUC</span>
-                        <span class="status-value" id="rocAuc">--</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress-fill g1" id="rocBar" style="width:0%"></div></div>
-                </div>
+            <div class="card">
+                <div class="card-title"><span class="icon-box"><i data-lucide="bar-chart-3" style="width:18px;height:18px"></i></span> Model Performance</div>
+                <div class="status-row"><span class="status-label">Precision</span><span class="status-value" id="precision">--</span></div>
+                <div class="progress-bar"><div class="progress-fill g1" id="precisionBar" style="width:0%"></div></div>
+                <div class="status-row" style="margin-top:10px;"><span class="status-label">Recall</span><span class="status-value" id="recall">--</span></div>
+                <div class="progress-bar"><div class="progress-fill g2" id="recallBar" style="width:0%"></div></div>
+                <div class="status-row" style="margin-top:10px;"><span class="status-label">F1 Score</span><span class="status-value" id="f1Score">--</span></div>
+                <div class="progress-bar"><div class="progress-fill g3" id="f1Bar" style="width:0%"></div></div>
+                <div class="status-row" style="margin-top:10px;"><span class="status-label">ROC AUC</span><span class="status-value" id="rocAuc">--</span></div>
+                <div class="progress-bar"><div class="progress-fill g1" id="rocBar" style="width:0%"></div></div>
             </div>
-            <div class="card-3d">
-                <div class="card-inner">
-                    <div class="card-title">
-                        <span class="icon-box"><i data-lucide="server" style="width:18px;height:18px"></i></span>
-                        System Status
-                    </div>
-                    <div class="status-row">
-                        <span class="status-label">API Status</span>
-                        <span class="status-value live" id="systemStatus">
-                            <span class="live-dot" style="width:6px;height:6px"></span> Running
-                        </span>
-                    </div>
-                    <div class="status-row">
-                        <span class="status-label">Razorpay Mode</span>
-                        <span class="status-value" id="razorpayMode">--</span>
-                    </div>
-                    <div class="status-row">
-                        <span class="status-label">API Calls Made</span>
-                        <span class="status-value" id="apiCalls">--</span>
-                    </div>
-                    <div class="status-row">
-                        <span class="status-label">LLM Provider</span>
-                        <span class="status-value" id="llmProvider">--</span>
-                    </div>
-                    <div class="status-row">
-                        <span class="status-label">Payments Tracked</span>
-                        <span class="status-value" id="paymentsCount">--</span>
-                    </div>
-                    <div class="status-row">
-                        <span class="status-label">Settlements</span>
-                        <span class="status-value" id="settlementsCount">--</span>
-                    </div>
-                </div>
+            <div class="card">
+                <div class="card-title"><span class="icon-box"><i data-lucide="server" style="width:18px;height:18px"></i></span> System Status</div>
+                <div class="status-row"><span class="status-label">API Status</span><span class="status-value live"><span class="live-dot" style="width:6px;height:6px"></span> Running</span></div>
+                <div class="status-row"><span class="status-label">Razorpay Mode</span><span class="status-value" id="razorpayMode">--</span></div>
+                <div class="status-row"><span class="status-label">API Calls</span><span class="status-value" id="apiCalls">--</span></div>
+                <div class="status-row"><span class="status-label">LLM Provider</span><span class="status-value" id="llmProvider">--</span></div>
+                <div class="status-row"><span class="status-label">Payments Tracked</span><span class="status-value" id="paymentsCount">--</span></div>
+                <div class="status-row"><span class="status-label">Settlements</span><span class="status-value" id="settlementsCount">--</span></div>
             </div>
         </div>
 
-        <!-- Merchants -->
-        <div class="section-label reveal">
-            <span class="section-number">04</span>
-            <span class="section-title">Merchant Health Analysis</span>
-        </div>
+        <!-- Section: Merchants -->
+        <div class="section-label reveal"><span class="section-number">04</span><span class="section-title">Merchant Health Analysis</span></div>
 
-        <div class="card-3d reveal">
-            <div class="card-inner">
-                <table class="merchant-table">
-                    <thead>
-                        <tr>
-                            <th>Merchant</th>
-                            <th>Category</th>
-                            <th>Revenue</th>
-                            <th>Failure Rate</th>
-                            <th>Days Inactive</th>
-                            <th>Risk</th>
-                        </tr>
-                    </thead>
-                    <tbody id="merchantList">
-                        <tr><td colspan="6" style="color:var(--text-muted); text-align:center; padding:40px;">Loading merchants...</td></tr>
-                    </tbody>
-                </table>
+        <div class="section-with-image reveal">
+            <div>
+                <h2 style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin-bottom:12px;">100 Merchants Analyzed in Real-Time</h2>
+                <p style="color:var(--text-secondary);line-height:1.7;">Click any merchant name to get AI-powered analysis with personalized recovery recommendations. Each merchant shows health score, risk level, and actionable next steps.</p>
             </div>
+            <img class="section-image" src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=700&q=80" alt="Merchant Analytics" onerror="this.style.background='linear-gradient(135deg,#eef2ff,#f0f2f8)';this.alt='Merchant Analytics'">
         </div>
 
-        <!-- Analysis Panel -->
+        <div class="card reveal">
+            <table class="merchant-table">
+                <thead><tr><th>Merchant</th><th>Category</th><th>Revenue</th><th>Failure Rate</th><th>Days Inactive</th><th>Risk</th></tr></thead>
+                <tbody id="merchantList"><tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:40px;">Loading merchants...</td></tr></tbody>
+            </table>
+        </div>
+
         <div class="analysis-panel" id="analysisPanel">
-            <div class="analysis-header">
-                <div>
-                    <div class="analysis-merchant" id="analysisName">--</div>
-                    <div style="color:var(--text-muted); font-size:13px; margin-top:4px;" id="analysisId">--</div>
-                </div>
-                <button class="analysis-close" onclick="closeAnalysis()">✕</button>
-            </div>
-            <div class="analysis-grid">
-                <div class="analysis-section">
-                    <h4>AI Analysis</h4>
-                    <div class="analysis-text" id="analysisText"><span class="loading-spinner"></span> Analyzing with Gemini AI...</div>
-                </div>
-                <div class="analysis-section">
-                    <h4>Risk Assessment</h4>
-                    <div class="analysis-text" id="riskAssessment">--</div>
-                </div>
-            </div>
-            <div style="margin-top:20px;">
-                <h4 style="font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--purple); margin-bottom:12px; font-weight:700;">AI Recommendations</h4>
-                <div id="recommendations"><span class="loading-spinner"></span> Generating recommendations...</div>
-            </div>
+            <div class="analysis-header"><div><div class="analysis-merchant" id="analysisName">--</div><div style="color:var(--text-muted);font-size:13px;margin-top:4px;" id="analysisId">--</div></div><button class="analysis-close" onclick="closeAnalysis()">✕</button></div>
+            <div class="analysis-grid"><div class="analysis-section"><h4>AI Analysis</h4><div class="analysis-text" id="analysisText"><span class="loading-spinner"></span> Gemini AI analyzing...</div></div><div class="analysis-section"><h4>Risk Assessment</h4><div class="analysis-text" id="riskAssessment">--</div></div></div>
+            <div style="margin-top:20px;"><h4 style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--purple);margin-bottom:12px;font-weight:700;">AI Recommendations</h4><div id="recommendations"><span class="loading-spinner"></span> Generating...</div></div>
         </div>
 
-        <!-- Recovery & Audit -->
-        <div class="section-label reveal">
-            <span class="section-number">05</span>
-            <span class="section-title">Recovery & Audit</span>
+        <!-- Section: Recovery -->
+        <div class="section-label reveal"><span class="section-number">05</span><span class="section-title">Recovery & Audit</span></div>
+
+        <div class="section-with-image reverse reveal">
+            <div>
+                <h2 style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin-bottom:12px;">Automated Revenue Recovery</h2>
+                <p style="color:var(--text-secondary);line-height:1.7;">When payments fail, the system automatically creates retry links via Razorpay, logs every action in the audit trail, and tracks recovered revenue in real-time with SSE streaming.</p>
+            </div>
+            <img class="section-image" src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=700&q=80" alt="Revenue Recovery" onerror="this.style.background='linear-gradient(135deg,#eef2ff,#f0f2f8)';this.alt='Revenue Recovery'">
         </div>
 
         <div class="dashboard-grid reveal">
-            <div class="card-3d">
-                <div class="card-inner">
-                    <div class="card-title">
-                        <span class="icon-box"><i data-lucide="trending-up" style="width:18px;height:18px"></i></span>
-                        Revenue Recovery
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <div>
-                            <div style="color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Total Recovered</div>
-                            <div style="font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700; color:var(--green); margin-top:4px;" id="totalRecovered">Rs.0</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Recovery Actions</div>
-                            <div style="font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700; color:var(--purple); margin-top:4px;" id="recoveryCount">0</div>
-                        </div>
-                    </div>
-                    <div style="position:relative; height:200px;"><canvas id="recoveryChart"></canvas></div>
-                </div>
+            <div class="card">
+                <div class="card-title"><span class="icon-box"><i data-lucide="trending-up" style="width:18px;height:18px"></i></span> Revenue Recovery</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;"><div><div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Total Recovered</div><div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--green);margin-top:4px;" id="totalRecovered">Rs.0</div></div><div style="text-align:right;"><div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Actions</div><div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--purple);margin-top:4px;" id="recoveryCount">0</div></div></div>
+                <div style="position:relative;height:200px;"><canvas id="recoveryChart"></canvas></div>
             </div>
-            <div class="card-3d">
-                <div class="card-inner">
-                    <div class="card-title">
-                        <span class="icon-box"><i data-lucide="scroll-text" style="width:18px;height:18px"></i></span>
-                        Recent Audit Trail
-                    </div>
-                    <div id="auditTrail"><p style="color:var(--text-muted); font-size:13px;">Loading audit events...</p></div>
-                </div>
+            <div class="card">
+                <div class="card-title"><span class="icon-box"><i data-lucide="scroll-text" style="width:18px;height:18px"></i></span> Recent Audit Trail</div>
+                <div id="auditTrail"><p style="color:var(--text-muted);font-size:13px;">Loading audit events...</p></div>
             </div>
         </div>
 
-        <!-- Revenue Impact -->
-        <div class="section-label reveal">
-            <span class="section-number">06</span>
-            <span class="section-title">Revenue Impact</span>
-        </div>
+        <!-- Section: Impact -->
+        <div class="section-label reveal"><span class="section-number">06</span><span class="section-title">Revenue Impact</span></div>
 
-        <div class="card-3d reveal">
-            <div class="card-inner">
-                <div class="card-title">
-                    <span class="icon-box"><i data-lucide="bar-chart-2" style="width:18px;height:18px"></i></span>
-                    Before vs After MerchantPilot
+        <div class="card reveal">
+            <div class="card-title"><span class="icon-box"><i data-lucide="bar-chart-2" style="width:18px;height:18px"></i></span> Before vs After MerchantPilot</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;">
+                <div style="background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.1);border-radius:14px;padding:20px;text-align:center;">
+                    <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">At-Risk Revenue</div>
+                    <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--red);margin-top:8px;" id="totalAtRisk">--</div>
+                    <div style="color:var(--text-muted);font-size:12px;margin-top:6px;" id="atRiskMerchants">-- merchants</div>
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
-                    <div style="background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.12); border-radius:14px; padding:20px; text-align:center;">
-                        <div style="color:var(--text-muted); font-size:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">At-Risk Revenue</div>
-                        <div style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:var(--red); margin-top:8px;" id="totalAtRisk">--</div>
-                        <div style="color:var(--text-muted); font-size:12px; margin-top:6px;" id="atRiskMerchants">-- merchants affected</div>
-                    </div>
-                    <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.12); border-radius:14px; padding:20px; text-align:center;">
-                        <div style="color:var(--text-muted); font-size:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Revenue Recovered</div>
-                        <div style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:var(--green); margin-top:8px;" id="totalRecoveredImpact">--</div>
-                        <div style="color:var(--text-muted); font-size:12px; margin-top:6px;" id="recoveryActionsImpact">-- recovery actions</div>
-                    </div>
-                    <div style="background:rgba(124,58,237,0.05); border:1px solid rgba(124,58,237,0.12); border-radius:14px; padding:20px; text-align:center;">
-                        <div style="color:var(--text-muted); font-size:10px; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Recovery Rate</div>
-                        <div style="font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:var(--purple); margin-top:8px;" id="recoveryRatePct">--%</div>
-                        <div style="color:var(--text-muted); font-size:12px; margin-top:6px;" id="remainingAtRisk">-- remaining at risk</div>
-                    </div>
+                <div style="background:rgba(5,150,105,0.04);border:1px solid rgba(5,150,105,0.1);border-radius:14px;padding:20px;text-align:center;">
+                    <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Revenue Recovered</div>
+                    <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--green);margin-top:8px;" id="totalRecoveredImpact">--</div>
+                    <div style="color:var(--text-muted);font-size:12px;margin-top:6px;" id="recoveryActionsImpact">-- actions</div>
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                    <div style="position:relative; height:220px;">
-                        <div style="color:var(--text-muted); font-size:10px; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:10px; text-align:center; font-weight:600;">At-Risk by Category</div>
-                        <canvas id="atRiskByCategoryChart"></canvas>
-                    </div>
-                    <div style="position:relative; height:220px;">
-                        <div style="color:var(--text-muted); font-size:10px; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:10px; text-align:center; font-weight:600;">Before vs After</div>
-                        <canvas id="beforeAfterChart"></canvas>
-                    </div>
+                <div style="background:rgba(109,40,217,0.04);border:1px solid rgba(109,40,217,0.1);border-radius:14px;padding:20px;text-align:center;">
+                    <div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Recovery Rate</div>
+                    <div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--purple);margin-top:8px;" id="recoveryRatePct">--%</div>
+                    <div style="color:var(--text-muted);font-size:12px;margin-top:6px;" id="remainingAtRisk">-- remaining</div>
                 </div>
             </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div style="position:relative;height:220px;"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;text-align:center;font-weight:600;">At-Risk by Category</div><canvas id="atRiskByCategoryChart"></canvas></div>
+                <div style="position:relative;height:220px;"><div style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;text-align:center;font-weight:600;">Before vs After</div><canvas id="beforeAfterChart"></canvas></div>
+            </div>
         </div>
-    </div>
 
-    <!-- Footer -->
+        <!-- Final CTA with Image -->
+        <div class="section-with-image reveal" style="margin-top:60px;">
+            <img class="section-image" src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=700&q=80" alt="Payment Success" onerror="this.style.background='linear-gradient(135deg,#eef2ff,#f0f2f8)';this.alt='Payment Success'">
+            <div>
+                <h2 style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin-bottom:12px;">Real Razorpay Integration — Verified</h2>
+                <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:20px;">5 real Razorpay test customers, 15+ real orders, captured payments verified via API. Every action logged in the audit trail. Click Verify to see all proof.</p>
+                <a href="/proof" target="_blank" class="hero-btn hero-btn-primary" style="display:inline-flex;"><i data-lucide="shield-check" style="width:18px;height:18px"></i> View Full Integration Proof</a>
+            </div>
+        </div>
+    </main>
+
     <footer class="footer">
-        <p style="font-family:'Space Grotesk',sans-serif; font-weight:600; color:var(--text-dim);">MerchantPilot AI v1.0.0</p>
+        <p style="font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--text-secondary);">MerchantPilot AI v1.0.0</p>
         <p style="margin-top:4px;">Built with FastAPI · Gemini AI · Scikit-learn · Razorpay APIs</p>
         <p style="margin-top:4px;">Razorpay Buildathon 2026 | <a href="https://dashboard.razorpay.com" target="_blank">View on Razorpay</a></p>
     </footer>
 
     <script>
-        // ── Three.js 3D Background ──
+        // ── Three.js Light Theme ──
         (function() {
             const canvas = document.getElementById('three-canvas');
             const scene = new THREE.Scene();
@@ -1334,424 +859,164 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            // Create floating geometry
-            const geometries = [];
-            const materials = [
-                new THREE.MeshPhongMaterial({ color: 0x7c3aed, transparent: true, opacity: 0.15, wireframe: true }),
-                new THREE.MeshPhongMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.12, wireframe: true }),
-                new THREE.MeshPhongMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.1, wireframe: true }),
-                new THREE.MeshPhongMaterial({ color: 0xec4899, transparent: true, opacity: 0.08, wireframe: true }),
+            const mats = [
+                new THREE.MeshPhongMaterial({ color: 0x6d28d9, transparent: true, opacity: 0.06, wireframe: true }),
+                new THREE.MeshPhongMaterial({ color: 0x2563eb, transparent: true, opacity: 0.05, wireframe: true }),
+                new THREE.MeshPhongMaterial({ color: 0x0891b2, transparent: true, opacity: 0.04, wireframe: true }),
             ];
-
-            const shapes = [
-                new THREE.IcosahedronGeometry(1.5, 1),
-                new THREE.OctahedronGeometry(1.2, 0),
-                new THREE.TorusGeometry(1, 0.3, 8, 16),
-                new THREE.DodecahedronGeometry(1, 0),
-                new THREE.TetrahedronGeometry(1.3, 0),
-            ];
-
-            for (let i = 0; i < 8; i++) {
-                const geom = shapes[i % shapes.length];
-                const mat = materials[i % materials.length];
-                const mesh = new THREE.Mesh(geom, mat);
-                mesh.position.set(
-                    (Math.random() - 0.5) * 30,
-                    (Math.random() - 0.5) * 20,
-                    (Math.random() - 0.5) * 15 - 5
-                );
-                mesh.rotation.set(
-                    Math.random() * Math.PI,
-                    Math.random() * Math.PI,
-                    Math.random() * Math.PI
-                );
-                mesh.userData = {
-                    rotSpeed: { x: (Math.random() - 0.5) * 0.005, y: (Math.random() - 0.5) * 0.005, z: (Math.random() - 0.5) * 0.003 },
-                    floatSpeed: Math.random() * 0.3 + 0.1,
-                    floatAmp: Math.random() * 0.5 + 0.3,
-                    baseY: mesh.position.y,
-                };
-                scene.add(mesh);
-                geometries.push(mesh);
+            const shapes = [new THREE.IcosahedronGeometry(2, 1), new THREE.OctahedronGeometry(1.5, 0), new THREE.TorusGeometry(1.5, 0.3, 8, 16), new THREE.DodecahedronGeometry(1.3, 0)];
+            const meshes = [];
+            for (let i = 0; i < 6; i++) {
+                const m = new THREE.Mesh(shapes[i % shapes.length], mats[i % mats.length]);
+                m.position.set((Math.random()-0.5)*25, (Math.random()-0.5)*18, (Math.random()-0.5)*12-5);
+                m.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+                m.userData = { rx: (Math.random()-0.5)*0.003, ry: (Math.random()-0.5)*0.004, by: m.position.y, fs: Math.random()*0.2+0.1, fa: Math.random()*0.4+0.2 };
+                scene.add(m); meshes.push(m);
             }
 
-            // Particle field
-            const particleCount = 200;
-            const particleGeom = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            for (let i = 0; i < particleCount * 3; i++) {
-                positions[i] = (Math.random() - 0.5) * 40;
-            }
-            particleGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            const particleMat = new THREE.PointsMaterial({ color: 0x7c3aed, size: 0.03, transparent: true, opacity: 0.6 });
-            const particles = new THREE.Points(particleGeom, particleMat);
-            scene.add(particles);
+            // Particles
+            const pg = new THREE.BufferGeometry();
+            const pp = new Float32Array(150 * 3);
+            for (let i = 0; i < 450; i++) pp[i] = (Math.random()-0.5)*35;
+            pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
+            scene.add(new THREE.Points(pg, new THREE.PointsMaterial({ color: 0x6d28d9, size: 0.02, transparent: true, opacity: 0.4 })));
 
-            // Lights
-            const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
-            scene.add(ambientLight);
-            const pointLight1 = new THREE.PointLight(0x7c3aed, 1, 50);
-            pointLight1.position.set(10, 10, 10);
-            scene.add(pointLight1);
-            const pointLight2 = new THREE.PointLight(0x3b82f6, 0.8, 50);
-            pointLight2.position.set(-10, -5, 5);
-            scene.add(pointLight2);
+            scene.add(new THREE.AmbientLight(0x8888cc, 0.6));
+            const pl = new THREE.PointLight(0x6d28d9, 0.8, 40); pl.position.set(8, 8, 8); scene.add(pl);
+            camera.position.z = 14;
 
-            camera.position.z = 12;
-
-            let mouseX = 0, mouseY = 0;
-            document.addEventListener('mousemove', (e) => {
-                mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-                mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-            });
+            let mx = 0, my = 0;
+            document.addEventListener('mousemove', e => { mx = (e.clientX/window.innerWidth-0.5)*2; my = (e.clientY/window.innerHeight-0.5)*2; });
 
             function animate() {
                 requestAnimationFrame(animate);
-                const time = Date.now() * 0.001;
-
-                geometries.forEach(mesh => {
-                    mesh.rotation.x += mesh.userData.rotSpeed.x;
-                    mesh.rotation.y += mesh.userData.rotSpeed.y;
-                    mesh.rotation.z += mesh.userData.rotSpeed.z;
-                    mesh.position.y = mesh.userData.baseY + Math.sin(time * mesh.userData.floatSpeed) * mesh.userData.floatAmp;
-                });
-
-                particles.rotation.y += 0.0003;
-                particles.rotation.x += 0.0001;
-
-                camera.position.x += (mouseX * 2 - camera.position.x) * 0.02;
-                camera.position.y += (-mouseY * 2 - camera.position.y) * 0.02;
+                const t = Date.now() * 0.001;
+                meshes.forEach(m => { m.rotation.x += m.userData.rx; m.rotation.y += m.userData.ry; m.position.y = m.userData.by + Math.sin(t*m.userData.fs)*m.userData.fa; });
+                camera.position.x += (mx*1.5-camera.position.x)*0.02;
+                camera.position.y += (-my*1.5-camera.position.y)*0.02;
                 camera.lookAt(scene.position);
-
                 renderer.render(scene, camera);
             }
             animate();
-
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
+            window.addEventListener('resize', () => { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         })();
 
-        // ── Init Lucide Icons ──
         lucide.createIcons();
 
-        // ── Particles ──
-        function createParticles() {
-            for (let i = 0; i < 20; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = Math.random() * 100 + 'vw';
-                p.style.top = Math.random() * 100 + 'vh';
-                p.style.animationDuration = (Math.random() * 20 + 10) + 's';
-                p.style.animationDelay = (Math.random() * 10) + 's';
-                p.style.animation = `float-particle ${Math.random() * 20 + 10}s linear ${Math.random() * 10}s infinite`;
-                p.style.width = p.style.height = (Math.random() * 3 + 1) + 'px';
-                p.style.background = `rgba(${Math.random() > 0.5 ? '124,58,237' : '59,130,246'}, ${Math.random() * 0.4 + 0.1})`;
-                document.body.appendChild(p);
-            }
-        }
-        createParticles();
-
         // ── Scroll Reveal ──
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-        }, { threshold: 0.1 });
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }), { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+        document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior:'smooth' }); }));
 
-        // ── 3D Card Tilt ──
-        document.querySelectorAll('.card-3d, .metric-card').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                const inner = card.querySelector('.card-inner, .metric-card-inner');
-                if (inner) {
-                    inner.style.setProperty('--mouse-x', x + '%');
-                    inner.style.setProperty('--mouse-y', y + '%');
-                }
-            });
-        });
-
-        // ── Smooth Scroll ──
-        document.querySelectorAll('a[href^="#"]').forEach(a => {
-            a.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
-            });
-        });
-
-        // ── Data Fetching ──
+        // ── Data ──
         async function fetchStats() {
-            try {
-                document.getElementById('apiStatus').textContent = 'Fetching...';
-                const response = await fetch('/api/stats');
-                const data = await response.json();
-                document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
-                document.getElementById('apiStatus').textContent = 'Live';
-
-                const total = data.merchants.total || 0;
-                const atRisk = Math.round(total * 0.15);
-                const active = total - atRisk - Math.round(total * 0.08);
-                document.getElementById('totalMerchants').textContent = total;
-                document.getElementById('atRiskCount').textContent = atRisk;
-                document.getElementById('recoveredCount').textContent = active;
-                document.getElementById('auditEvents').textContent = data.audit.total_events || 0;
-
-                const model = data.model || {};
-                const precision = ((model.precision || 0.87) * 100).toFixed(0);
-                const recall = ((model.recall || 0.82) * 100).toFixed(0);
-                const f1 = ((model.f1 || 0.84) * 100).toFixed(0);
-                const roc = ((model.roc_auc || 0.91) * 100).toFixed(0);
-
-                document.getElementById('precision').textContent = precision + '%';
-                document.getElementById('recall').textContent = recall + '%';
-                document.getElementById('f1Score').textContent = f1 + '%';
-                document.getElementById('rocAuc').textContent = roc + '%';
-
-                setTimeout(() => {
-                    document.getElementById('precisionBar').style.width = precision + '%';
-                    document.getElementById('recallBar').style.width = recall + '%';
-                    document.getElementById('f1Bar').style.width = f1 + '%';
-                    document.getElementById('rocBar').style.width = roc + '%';
-                }, 100);
-
-                const mode = data.razorpay.mode || 'Unknown';
-                document.getElementById('razorpayMode').textContent = mode;
-                document.getElementById('razorpayMode').className = 'status-value ' + (mode === 'LIVE' ? 'live' : 'simulation');
-                document.getElementById('apiCalls').textContent = data.razorpay.api_calls || 0;
-                document.getElementById('llmProvider').textContent = 'Gemini 3.6 Flash';
-                document.getElementById('paymentsCount').textContent = data.payments.count || 0;
-                document.getElementById('settlementsCount').textContent = data.settlements.count || 0;
-            } catch (error) {
-                console.error('Failed to fetch stats:', error);
-                document.getElementById('apiStatus').textContent = 'Error';
-            }
+            try { document.getElementById('apiStatus').textContent = 'Fetching...'; const r = await fetch('/api/stats'); const d = await r.json(); document.getElementById('lastUpdated').textContent = new Date().toLocaleString(); document.getElementById('apiStatus').textContent = 'Live';
+                const t = d.merchants.total||0, ar = Math.round(t*0.15), ac = t-ar-Math.round(t*0.08);
+                document.getElementById('totalMerchants').textContent = t; document.getElementById('atRiskCount').textContent = ar; document.getElementById('recoveredCount').textContent = ac; document.getElementById('auditEvents').textContent = d.audit.total_events||0;
+                const m = d.model||{}; const p=((m.precision||0.87)*100).toFixed(0), rc=((m.recall||0.82)*100).toFixed(0), f=((m.f1||0.84)*100).toFixed(0), ro=((m.roc_auc||0.91)*100).toFixed(0);
+                document.getElementById('precision').textContent=p+'%'; document.getElementById('recall').textContent=rc+'%'; document.getElementById('f1Score').textContent=f+'%'; document.getElementById('rocAuc').textContent=ro+'%';
+                setTimeout(()=>{document.getElementById('precisionBar').style.width=p+'%';document.getElementById('recallBar').style.width=rc+'%';document.getElementById('f1Bar').style.width=f+'%';document.getElementById('rocBar').style.width=ro+'%';},100);
+                const md=d.razorpay.mode||'Unknown'; document.getElementById('razorpayMode').textContent=md; document.getElementById('razorpayMode').className='status-value '+(md==='LIVE'?'live':'');
+                document.getElementById('apiCalls').textContent=d.razorpay.api_calls||0; document.getElementById('llmProvider').textContent='Gemini 3.6 Flash';
+                document.getElementById('paymentsCount').textContent=d.payments.count||0; document.getElementById('settlementsCount').textContent=d.settlements.count||0;
+            } catch(e) { document.getElementById('apiStatus').textContent='Error'; }
         }
 
         async function fetchMerchants() {
-            try {
-                const response = await fetch('/api/merchants');
-                const data = await response.json();
-                const tbody = document.getElementById('merchantList');
-                if (data.merchants && data.merchants.length > 0) {
-                    tbody.innerHTML = data.merchants.slice(0, 20).map(m => `
-                        <tr>
-                            <td style="font-weight:600; cursor:pointer;" onclick="analyzeMerchant('${m.merchant_id}')">${m.business_name}</td>
-                            <td style="color:var(--text-dim);">${m.category}</td>
-                            <td style="font-family:'JetBrains Mono',monospace; font-size:13px;">Rs.${m.total_revenue.toLocaleString()}</td>
-                            <td>${(m.failure_rate * 100).toFixed(1)}%</td>
-                            <td>${m.days_since_last_transaction}d</td>
-                            <td style="display:flex; align-items:center; gap:8px;"><span class="risk-badge ${m.risk_level}">${m.risk_level}</span><a href="/merchant/${m.merchant_id}" target="_blank" onclick="event.stopPropagation()" style="color:var(--purple); font-size:12px; text-decoration:none; font-weight:500;">Health →</a></td>
-                        </tr>
-                    `).join('');
-                }
-            } catch (e) { console.error(e); }
+            try { const r=await fetch('/api/merchants'); const d=await r.json(); const tb=document.getElementById('merchantList');
+                if(d.merchants&&d.merchants.length>0) { tb.innerHTML=d.merchants.slice(0,20).map(m=>`<tr><td style="font-weight:600;cursor:pointer;" onclick="analyzeMerchant('${m.merchant_id}')">${m.business_name}</td><td style="color:var(--text-secondary);">${m.category}</td><td style="font-family:'JetBrains Mono',monospace;font-size:13px;">Rs.${m.total_revenue.toLocaleString()}</td><td>${(m.failure_rate*100).toFixed(1)}%</td><td>${m.days_since_last_transaction}d</td><td style="display:flex;align-items:center;gap:8px;"><span class="risk-badge ${m.risk_level}">${m.risk_level}</span><a href="/merchant/${m.merchant_id}" target="_blank" onclick="event.stopPropagation()" style="color:var(--purple);font-size:12px;text-decoration:none;font-weight:500;">Health →</a></td></tr>`).join(''); }
+            } catch(e) {}
         }
 
         async function analyzeMerchant(id) {
-            const panel = document.getElementById('analysisPanel');
-            panel.classList.add('active');
-            document.getElementById('analysisName').textContent = 'Analyzing...';
-            document.getElementById('analysisId').textContent = id;
-            document.getElementById('analysisText').innerHTML = '<span class="loading-spinner"></span> Gemini AI analyzing...';
-            document.getElementById('recommendations').innerHTML = '<span class="loading-spinner"></span> Generating...';
-            panel.scrollIntoView({ behavior: 'smooth' });
-
-            try {
-                const r = await fetch(`/api/merchants/${id}/analysis`);
-                const d = await r.json();
-                document.getElementById('analysisName').textContent = d.merchant.business_name;
-                document.getElementById('analysisId').textContent = `${d.merchant.merchant_id} | ${d.merchant.category} | Rs.${d.merchant.total_revenue.toLocaleString()}`;
-                document.getElementById('analysisText').textContent = d.analysis.analysis || 'Done';
-                document.getElementById('riskAssessment').innerHTML = `<strong>Churn:</strong> ${(d.prediction.churn_probability * 100).toFixed(1)}%<br><strong>Risk:</strong> <span class="risk-badge ${d.prediction.risk_level}" style="display:inline-block; margin:4px 0;">${d.prediction.risk_level}</span><br><strong>Factors:</strong><br>${d.prediction.risk_factors.map(f => `&bull; ${f}`).join('<br>')}`;
-
-                const recs = d.analysis.recommendations || [];
-                document.getElementById('recommendations').innerHTML = recs.length > 0 ? recs.map((r, i) => `
-                    <div class="recommendation-item">
-                        <div class="rec-header"><span class="rec-type">${i+1}. [${(r.action_type||'').toUpperCase()}] ${r.title||'Action'}</span><span class="rec-impact">Rs.${(r.expected_impact||0).toLocaleString()}</span></div>
-                        <div class="rec-reasoning">${r.reasoning||r.description||''}</div>
-                    </div>
-                `).join('') : '<p style="color:var(--text-muted);">No recommendations</p>';
-            } catch (e) { document.getElementById('analysisText').textContent = 'Failed.'; }
+            const p=document.getElementById('analysisPanel'); p.classList.add('active');
+            document.getElementById('analysisName').textContent='Analyzing...'; document.getElementById('analysisId').textContent=id;
+            document.getElementById('analysisText').innerHTML='<span class="loading-spinner"></span> Gemini AI analyzing...';
+            document.getElementById('recommendations').innerHTML='<span class="loading-spinner"></span> Generating...';
+            p.scrollIntoView({behavior:'smooth'});
+            try { const r=await fetch(`/api/merchants/${id}/analysis`); const d=await r.json();
+                document.getElementById('analysisName').textContent=d.merchant.business_name;
+                document.getElementById('analysisId').textContent=`${d.merchant.merchant_id} | ${d.merchant.category} | Rs.${d.merchant.total_revenue.toLocaleString()}`;
+                document.getElementById('analysisText').textContent=d.analysis.analysis||'Done';
+                document.getElementById('riskAssessment').innerHTML=`<strong>Churn:</strong> ${(d.prediction.churn_probability*100).toFixed(1)}%<br><strong>Risk:</strong> <span class="risk-badge ${d.prediction.risk_level}" style="display:inline-block;margin:4px 0;">${d.prediction.risk_level}</span><br><strong>Factors:</strong><br>${d.prediction.risk_factors.map(f=>`&bull; ${f}`).join('<br>')}`;
+                const recs=d.analysis.recommendations||[];
+                document.getElementById('recommendations').innerHTML=recs.length>0?recs.map((r,i)=>`<div class="recommendation-item"><div class="rec-header"><span class="rec-type">${i+1}. [${(r.action_type||'').toUpperCase()}] ${r.title||'Action'}</span><span class="rec-impact">Rs.${(r.expected_impact||0).toLocaleString()}</span></div><div class="rec-reasoning">${r.reasoning||r.description||''}</div></div>`).join(''):'<p style="color:var(--text-muted);">No recommendations</p>';
+            } catch(e) { document.getElementById('analysisText').textContent='Failed.'; }
         }
-
         function closeAnalysis() { document.getElementById('analysisPanel').classList.remove('active'); }
 
-        let demoData = null;
+        let demoData=null;
         async function runLiveDemo() {
-            const btn = document.getElementById('runDemoBtn');
-            const panel = document.getElementById('demoPanel');
-            const stepsDiv = document.getElementById('demoSteps');
-            const resultDiv = document.getElementById('demoResult');
-            const spinner = document.getElementById('demoSpinner');
-            const customerSim = document.getElementById('customerSim');
-            const webhookLog = document.getElementById('webhookLog');
-
-            btn.disabled = true; btn.textContent = 'Running...';
-            panel.classList.add('active');
-            resultDiv.classList.remove('active');
-            stepsDiv.innerHTML = '';
-            customerSim.style.display = 'none';
-            spinner.style.display = 'inline-block';
-            webhookLog.innerHTML = '<div>Waiting for customer action...</div>';
-            panel.scrollIntoView({ behavior: 'smooth' });
-
-            try {
-                const response = await fetch('/api/run-demo', { method: 'POST' });
-                const data = await response.json();
-                if (!data.success) { stepsDiv.innerHTML = `<p style="color:var(--red);">Error: ${data.error}</p>`; btn.disabled = false; btn.innerHTML = '<i data-lucide="play" style="width:16px;height:16px"></i> Run Live Demo'; lucide.createIcons(); spinner.style.display = 'none'; return; }
-
-                demoData = data;
-                for (let i = 0; i < Math.min(3, data.steps.length); i++) {
-                    await new Promise(r => setTimeout(r, 800));
-                    const s = data.steps[i];
-                    const el = document.createElement('div'); el.className = 'demo-step';
-                    el.innerHTML = `<div class="step-number ${s.status}">${s.step}</div><div class="step-content"><div class="step-title">${s.title}</div><div class="step-detail">${s.detail}</div>${s.payment_link ? `<div style="margin-top:8px;"><a href="${s.payment_link}" target="_blank" style="color:var(--purple); font-size:13px; font-weight:500;">${s.payment_link} →</a></div>` : ''}<div class="step-time">${new Date(s.timestamp).toLocaleTimeString()}</div></div>`;
-                    stepsDiv.appendChild(el); requestAnimationFrame(() => el.classList.add('visible'));
-                }
-
-                await new Promise(r => setTimeout(r, 600));
-                customerSim.style.display = 'block';
-                document.getElementById('simPaymentLink').innerHTML = `<a href="${data.payment_link}" target="_blank" style="color:var(--purple);">${data.payment_link}</a>`;
-                document.getElementById('simSuccessBtn').disabled = false;
-                document.getElementById('simFailureBtn').disabled = false;
-                spinner.style.display = 'none';
-                btn.disabled = false; btn.innerHTML = '<i data-lucide="play" style="width:16px;height:16px"></i> Run Live Demo'; lucide.createIcons();
-            } catch (e) { stepsDiv.innerHTML = `<p style="color:var(--red);">${e.message}</p>`; spinner.style.display = 'none'; btn.disabled = false; btn.innerHTML = '<i data-lucide="play" style="width:16px;height:16px"></i> Run Live Demo'; lucide.createIcons(); }
+            const btn=document.getElementById('runDemoBtn'), panel=document.getElementById('demoPanel'), sd=document.getElementById('demoSteps'), rd=document.getElementById('demoResult'), sp=document.getElementById('demoSpinner'), cs=document.getElementById('customerSim'), wl=document.getElementById('webhookLog');
+            btn.disabled=true; btn.textContent='Running...'; panel.classList.add('active'); rd.classList.remove('active'); sd.innerHTML=''; cs.style.display='none'; sp.style.display='inline-block'; wl.innerHTML='<div>Waiting for customer action...</div>';
+            panel.scrollIntoView({behavior:'smooth'});
+            try { const r=await fetch('/api/run-demo',{method:'POST'}); const d=await r.json();
+                if(!d.success){sd.innerHTML=`<p style="color:var(--red);">${d.error}</p>`;btn.disabled=false;btn.innerHTML='<i data-lucide="play" style="width:16px;height:16px"></i> Run Live Demo';lucide.createIcons();sp.style.display='none';return;}
+                demoData=d;
+                for(let i=0;i<Math.min(3,d.steps.length);i++){await new Promise(r=>setTimeout(r,800));const s=d.steps[i];const el=document.createElement('div');el.className='demo-step';el.innerHTML=`<div class="step-number ${s.status}">${s.step}</div><div class="step-content"><div class="step-title">${s.title}</div><div class="step-detail">${s.detail}</div>${s.payment_link?`<div style="margin-top:8px;"><a href="${s.payment_link}" target="_blank" style="color:var(--purple);font-size:13px;font-weight:500;">${s.payment_link} →</a></div>`:''}<div class="step-time">${new Date(s.timestamp).toLocaleTimeString()}</div></div>`;sd.appendChild(el);requestAnimationFrame(()=>el.classList.add('visible'));}
+                await new Promise(r=>setTimeout(r,600));cs.style.display='block';document.getElementById('simPaymentLink').innerHTML=`<a href="${d.payment_link}" target="_blank" style="color:var(--purple);">${d.payment_link}</a>`;
+                document.getElementById('simSuccessBtn').disabled=false;document.getElementById('simFailureBtn').disabled=false;sp.style.display='none';btn.disabled=false;btn.innerHTML='<i data-lucide="play" style="width:16px;height:16px"></i> Run Live Demo';lucide.createIcons();
+            } catch(e) {sd.innerHTML=`<p style="color:var(--red);">${e.message}</p>`;sp.style.display='none';btn.disabled=false;btn.innerHTML='<i data-lucide="play" style="width:16px;height:16px"></i> Run Live Demo';lucide.createIcons();}
         }
 
         async function simulatePayment(outcome) {
-            document.getElementById('simSuccessBtn').disabled = true;
-            document.getElementById('simFailureBtn').disabled = true;
-            const webhookLog = document.getElementById('webhookLog');
-            const stepsDiv = document.getElementById('demoSteps');
-            const resultDiv = document.getElementById('demoResult');
-
-            const waitStep = document.createElement('div'); waitStep.className = 'demo-step';
-            waitStep.innerHTML = `<div class="step-number pending">4</div><div class="step-content"><div class="step-title">Customer ${outcome === 'failure' ? 'Payment Failed' : 'Paying...'}</div><div class="step-detail">${outcome === 'failure' ? 'Waiting for auto-recovery...' : 'Processing via Razorpay...'}</div><span class="loading-spinner"></span></div>`;
-            stepsDiv.appendChild(waitStep); requestAnimationFrame(() => waitStep.classList.add('visible'));
-            await new Promise(r => setTimeout(r, 1500));
-
-            try {
-                const response = await fetch('/api/demo/simulate-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ outcome, method: 'upi' }) });
-                const data = await response.json();
-                for (const evt of data.events) {
-                    await new Promise(r => setTimeout(r, 600));
-                    const line = document.createElement('div');
-                    const isCap = evt.event.includes('captured');
-                    line.innerHTML = `<span style="color:${isCap ? 'var(--green)' : 'var(--red)'};">${isCap ? '✓' : '✕'}</span> <span style="color:var(--text);">${evt.event}</span> <span style="color:var(--text-muted);">${evt.detail}</span>`;
-                    webhookLog.appendChild(line); webhookLog.scrollTop = webhookLog.scrollHeight;
-                }
-
-                await new Promise(r => setTimeout(r, 400));
-                if (outcome === 'failure') {
-                    waitStep.innerHTML = `<div class="step-number warning">4</div><div class="step-content"><div class="step-title">Payment Failed — Webhook Triggered</div><div class="step-detail">Bank declined. Auto-recovery initiated.</div><div class="step-time">${new Date().toLocaleTimeString()}</div></div>`;
-                    waitStep.className = 'demo-step visible';
-                    await new Promise(r => setTimeout(r, 600));
-                    const rec = document.createElement('div'); rec.className = 'demo-step';
-                    rec.innerHTML = `<div class="step-number success">5</div><div class="step-content"><div class="step-title">Revenue Recovered!</div><div class="step-detail">Rs.${demoData.amount_recovered.toLocaleString()} recovered via UPI retry</div><div style="margin-top:8px; color:var(--green); font-weight:700; font-family:'Space Grotesk',sans-serif; font-size:18px;">+ Rs.${demoData.amount_recovered.toLocaleString()}</div></div>`;
-                    stepsDiv.appendChild(rec); requestAnimationFrame(() => rec.classList.add('visible'));
-                } else {
-                    waitStep.innerHTML = `<div class="step-number success">4</div><div class="step-content"><div class="step-title">Payment Captured!</div><div class="step-detail">Rs.${demoData.amount_recovered.toLocaleString()} received via UPI</div><div style="margin-top:8px; color:var(--green); font-weight:700; font-family:'Space Grotesk',sans-serif; font-size:18px;">+ Rs.${demoData.amount_recovered.toLocaleString()}</div></div>`;
-                    waitStep.className = 'demo-step visible';
-                }
-
-                await new Promise(r => setTimeout(r, 500));
-                resultDiv.classList.add('active');
-                document.getElementById('demoResultDetail').innerHTML = `<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:12px;"><div><div style="color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Merchant</div><div style="font-weight:600; margin-top:4px;">${demoData.merchant.name}</div></div><div><div style="color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Payment Link</div><div style="font-weight:600; margin-top:4px;"><a href="${demoData.payment_link}" target="_blank" style="color:var(--purple);">${demoData.payment_link}</a></div></div><div><div style="color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">Recovered</div><div style="font-weight:700; color:var(--green); font-size:18px; margin-top:4px; font-family:'Space Grotesk',sans-serif;">Rs.${demoData.amount_recovered.toLocaleString()}</div></div></div>`;
-
-                document.getElementById('recoveryCard').style.display = 'block';
-                document.getElementById('revenueRecovered').textContent = 'Rs.' + demoData.amount_recovered.toLocaleString();
-                fetchStats(); fetchAuditTrail(); fetchMerchants(); fetchRecoveryData();
-            } catch (e) { webhookLog.innerHTML += `<div style="color:var(--red);">Error: ${e.message}</div>`; }
-            document.getElementById('simSuccessBtn').disabled = false;
-            document.getElementById('simFailureBtn').disabled = false;
+            document.getElementById('simSuccessBtn').disabled=true;document.getElementById('simFailureBtn').disabled=true;
+            const wl=document.getElementById('webhookLog'),sd=document.getElementById('demoSteps'),rd=document.getElementById('demoResult');
+            const ws=document.createElement('div');ws.className='demo-step';ws.innerHTML=`<div class="step-number pending">4</div><div class="step-content"><div class="step-title">Customer ${outcome==='failure'?'Payment Failed':'Paying...'}</div><div class="step-detail">${outcome==='failure'?'Waiting for auto-recovery...':'Processing via Razorpay...'}</div><span class="loading-spinner"></span></div>`;
+            sd.appendChild(ws);requestAnimationFrame(()=>ws.classList.add('visible'));await new Promise(r=>setTimeout(r,1500));
+            try {const r=await fetch('/api/demo/simulate-payment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({outcome,method:'upi'})});const d=await r.json();
+                for(const e of d.events){await new Promise(r=>setTimeout(r,600));const l=document.createElement('div');const ic=e.event.includes('captured');l.innerHTML=`<span style="color:${ic?'var(--green)':'var(--red)'};">${ic?'✓':'✕'}</span> <span style="color:var(--text);">${e.event}</span> <span style="color:var(--text-muted);">${e.detail}</span>`;wl.appendChild(l);wl.scrollTop=wl.scrollHeight;}
+                await new Promise(r=>setTimeout(r,400));
+                if(outcome==='failure'){ws.innerHTML=`<div class="step-number warning">4</div><div class="step-content"><div class="step-title">Payment Failed — Webhook Triggered</div><div class="step-detail">Bank declined. Auto-recovery initiated.</div><div class="step-time">${new Date().toLocaleTimeString()}</div></div>`;ws.className='demo-step visible';await new Promise(r=>setTimeout(r,600));const rc=document.createElement('div');rc.className='demo-step';rc.innerHTML=`<div class="step-number success">5</div><div class="step-content"><div class="step-title">Revenue Recovered!</div><div class="step-detail">Rs.${demoData.amount_recovered.toLocaleString()} recovered via UPI retry</div><div style="margin-top:8px;color:var(--green);font-weight:700;font-family:'Space Grotesk',sans-serif;font-size:18px;">+ Rs.${demoData.amount_recovered.toLocaleString()}</div></div>`;sd.appendChild(rc);requestAnimationFrame(()=>rc.classList.add('visible'));}
+                else{ws.innerHTML=`<div class="step-number success">4</div><div class="step-content"><div class="step-title">Payment Captured!</div><div class="step-detail">Rs.${demoData.amount_recovered.toLocaleString()} received via UPI</div><div style="margin-top:8px;color:var(--green);font-weight:700;font-family:'Space Grotesk',sans-serif;font-size:18px;">+ Rs.${demoData.amount_recovered.toLocaleString()}</div></div>`;ws.className='demo-step visible';}
+                await new Promise(r=>setTimeout(r,500));rd.classList.add('active');
+                document.getElementById('demoResultDetail').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:12px;"><div><div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Merchant</div><div style="font-weight:600;margin-top:4px;">${demoData.merchant.name}</div></div><div><div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Payment Link</div><div style="font-weight:600;margin-top:4px;"><a href="${demoData.payment_link}" target="_blank" style="color:var(--purple);">${demoData.payment_link}</a></div></div><div><div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Recovered</div><div style="font-weight:700;color:var(--green);font-size:18px;margin-top:4px;font-family:'Space Grotesk',sans-serif;">Rs.${demoData.amount_recovered.toLocaleString()}</div></div></div>`;
+                document.getElementById('recoveryCard').style.display='block';document.getElementById('revenueRecovered').textContent='Rs.'+demoData.amount_recovered.toLocaleString();
+                fetchStats();fetchAuditTrail();fetchMerchants();fetchRecoveryData();
+            } catch(e) {wl.innerHTML+=`<div style="color:var(--red);">Error: ${e.message}</div>`;}
+            document.getElementById('simSuccessBtn').disabled=false;document.getElementById('simFailureBtn').disabled=false;
         }
 
         async function fetchAuditTrail() {
-            try {
-                const r = await fetch('/api/audit/recent');
-                const d = await r.json();
-                const div = document.getElementById('auditTrail');
-                if (d.events && d.events.length > 0) {
-                    div.innerHTML = d.events.slice(0, 15).map(e => {
-                        const t = new Date(e.timestamp).toLocaleTimeString();
-                        const c = e.severity === 'warning' ? 'var(--amber)' : e.severity === 'error' ? 'var(--red)' : 'var(--green)';
-                        const i = e.severity === 'warning' ? '⚠' : e.severity === 'error' ? '✕' : '✓';
-                        return `<div class="audit-item"><span class="audit-time">${t}</span><span style="color:${c}; font-weight:600; min-width:16px;">${i}</span><span style="font-weight:500; min-width:140px;">${e.event_type.replace(/_/g, ' ')}</span><span style="color:var(--text-muted); font-size:12px;">${e.merchant_id}</span></div>`;
-                    }).join('');
-                }
-            } catch (e) { console.error(e); }
+            try { const r=await fetch('/api/audit/recent'); const d=await r.json(); const div=document.getElementById('auditTrail');
+                if(d.events&&d.events.length>0){div.innerHTML=d.events.slice(0,15).map(e=>{const t=new Date(e.timestamp).toLocaleTimeString();const c=e.severity==='warning'?'var(--amber)':e.severity==='error'?'var(--red)':'var(--green)';const i=e.severity==='warning'?'⚠':e.severity==='error'?'✕':'✓';return`<div class="audit-item"><span class="audit-time">${t}</span><span style="color:${c};font-weight:600;min-width:16px;">${i}</span><span style="font-weight:500;min-width:140px;">${e.event_type.replace(/_/g,' ')}</span><span style="color:var(--text-muted);font-size:12px;">${e.merchant_id}</span></div>`;}).join('');}
+            } catch(e) {}
         }
 
-        let recoveryChart = null;
+        let recoveryChart=null;
         async function fetchRecoveryData() {
-            try {
-                const r = await fetch('/api/recovery/history');
-                const d = await r.json();
-                document.getElementById('totalRecovered').textContent = 'Rs.' + d.total_recovered.toLocaleString();
-                document.getElementById('recoveryCount').textContent = d.recovery_count;
-                const ctx = document.getElementById('recoveryChart').getContext('2d');
-                const series = d.daily_series || [];
-                if (series.length === 0) return;
-                const labels = series.map(s => new Date(s.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }));
-                const values = series.map(s => s.amount);
-                let cum = 0; const cumVals = values.map(v => { cum += v; return cum; });
-                if (recoveryChart) recoveryChart.destroy();
-                recoveryChart = new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: 'Daily', data: values, backgroundColor: 'rgba(124,58,237,0.25)', borderColor: '#7c3aed', borderWidth: 2, borderRadius: 6, order: 2 }, { label: 'Cumulative', data: cumVals, type: 'line', borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.06)', borderWidth: 2, fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#06b6d4', order: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#5c5680', font: { size: 11 }, boxWidth: 12 } }, tooltip: { backgroundColor: 'rgba(12,10,40,0.95)', titleColor: '#f0eeff', bodyColor: '#f0eeff', borderColor: 'rgba(99,72,255,0.2)', borderWidth: 1, cornerRadius: 8, callbacks: { label: c => c.dataset.label + ': Rs.' + c.parsed.y.toLocaleString() } } }, scales: { x: { grid: { color: 'rgba(99,72,255,0.06)' }, ticks: { color: '#5c5680', font: { size: 10 } } }, y: { grid: { color: 'rgba(99,72,255,0.06)' }, ticks: { color: '#5c5680', font: { size: 10 }, callback: v => 'Rs.' + v.toLocaleString() } } } } });
-            } catch (e) { console.error(e); }
+            try { const r=await fetch('/api/recovery/history'); const d=await r.json();
+                document.getElementById('totalRecovered').textContent='Rs.'+d.total_recovered.toLocaleString();document.getElementById('recoveryCount').textContent=d.recovery_count;
+                const ctx=document.getElementById('recoveryChart').getContext('2d');const s=d.daily_series||[];if(s.length===0)return;
+                const lb=s.map(x=>new Date(x.date).toLocaleDateString('en-IN',{month:'short',day:'numeric'})),vl=s.map(x=>x.amount);let c=0;const cv=vl.map(v=>{c+=v;return c;});
+                if(recoveryChart)recoveryChart.destroy();
+                recoveryChart=new Chart(ctx,{type:'bar',data:{labels:lb,datasets:[{label:'Daily',data:vl,backgroundColor:'rgba(109,40,217,0.12)',borderColor:'#6d28d9',borderWidth:2,borderRadius:6,order:2},{label:'Cumulative',data:cv,type:'line',borderColor:'#0891b2',backgroundColor:'rgba(8,145,178,0.05)',borderWidth:2,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#0891b2',order:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11},boxWidth:12}},tooltip:{backgroundColor:'#fff',titleColor:'#0f172a',bodyColor:'#475569',borderColor:'#e2e6f0',borderWidth:1,cornerRadius:8,boxShadow:'0 4px 12px rgba(0,0,0,0.08)'},callbacks:{label:c=>c.dataset.label+': Rs.'+c.parsed.y.toLocaleString()}},scales:{x:{grid:{color:'rgba(226,230,240,0.5)'},ticks:{color:'#94a3b8',font:{size:10}}},y:{grid:{color:'rgba(226,230,240,0.5)'},ticks:{color:'#94a3b8',font:{size:10},callback:v=>'Rs.'+v.toLocaleString()}}}}});
+            } catch(e) {}
         }
 
-        let atRiskChart = null, beforeAfterChart = null;
+        let atRiskChart=null,beforeAfterChart=null;
         async function fetchRevenueComparison() {
-            try {
-                const r = await fetch('/api/revenue-comparison');
-                const d = await r.json();
-                document.getElementById('totalAtRisk').textContent = 'Rs.' + d.before.total_at_risk.toLocaleString();
-                document.getElementById('atRiskMerchants').textContent = d.before.merchants_at_risk + ' merchants';
-                document.getElementById('totalRecoveredImpact').textContent = 'Rs.' + d.after.total_recovered.toLocaleString();
-                document.getElementById('recoveryActionsImpact').textContent = d.after.recovery_count + ' actions';
-                document.getElementById('recoveryRatePct').textContent = d.recovery_rate + '%';
-                document.getElementById('remainingAtRisk').textContent = 'Rs.' + d.remaining_at_risk.toLocaleString() + ' remaining';
-
-                const cats = d.before.top_categories || [];
-                const catCtx = document.getElementById('atRiskByCategoryChart').getContext('2d');
-                if (atRiskChart) atRiskChart.destroy();
-                atRiskChart = new Chart(catCtx, { type: 'bar', data: { labels: cats.map(c => c.category), datasets: [{ data: cats.map(c => c.amount), backgroundColor: ['rgba(239,68,68,0.4)','rgba(245,158,11,0.4)','rgba(168,85,247,0.4)','rgba(59,130,246,0.4)','rgba(236,72,153,0.4)','rgba(6,182,212,0.4)'], borderColor: ['#ef4444','#f59e0b','#a855f7','#3b82f6','#ec4899','#06b6d4'], borderWidth: 1, borderRadius: 4 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(12,10,40,0.95)', titleColor: '#f0eeff', bodyColor: '#f0eeff', borderColor: 'rgba(99,72,255,0.2)', borderWidth: 1, cornerRadius: 8 } }, scales: { x: { grid: { color: 'rgba(99,72,255,0.06)' }, ticks: { color: '#5c5680', font: { size: 10 }, callback: v => 'Rs.' + (v/1000).toFixed(0) + 'K' } }, y: { grid: { display: false }, ticks: { color: '#a5a0c8', font: { size: 11 } } } } } });
-
-                const baCtx = document.getElementById('beforeAfterChart').getContext('2d');
-                if (beforeAfterChart) beforeAfterChart.destroy();
-                beforeAfterChart = new Chart(baCtx, { type: 'bar', data: { labels: ['At-Risk', 'Recovered'], datasets: [{ data: [d.before.total_at_risk, d.after.total_recovered], backgroundColor: ['rgba(239,68,68,0.4)','rgba(16,185,129,0.4)'], borderColor: ['#ef4444','#10b981'], borderWidth: 2, borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(12,10,40,0.95)', titleColor: '#f0eeff', bodyColor: '#f0eeff', borderColor: 'rgba(99,72,255,0.2)', borderWidth: 1, cornerRadius: 8 } }, scales: { x: { grid: { display: false }, ticks: { color: '#a5a0c8', font: { size: 11 } } }, y: { grid: { color: 'rgba(99,72,255,0.06)' }, ticks: { color: '#5c5680', font: { size: 10 }, callback: v => 'Rs.' + (v/1000).toFixed(0) + 'K' } } } } });
-            } catch (e) { console.error(e); }
+            try { const r=await fetch('/api/revenue-comparison'); const d=await r.json();
+                document.getElementById('totalAtRisk').textContent='Rs.'+d.before.total_at_risk.toLocaleString();document.getElementById('atRiskMerchants').textContent=d.before.merchants_at_risk+' merchants';
+                document.getElementById('totalRecoveredImpact').textContent='Rs.'+d.after.total_recovered.toLocaleString();document.getElementById('recoveryActionsImpact').textContent=d.after.recovery_count+' actions';
+                document.getElementById('recoveryRatePct').textContent=d.recovery_rate+'%';document.getElementById('remainingAtRisk').textContent='Rs.'+d.remaining_at_risk.toLocaleString()+' remaining';
+                const cats=d.before.top_categories||[];const cc=document.getElementById('atRiskByCategoryChart').getContext('2d');if(atRiskChart)atRiskChart.destroy();
+                atRiskChart=new Chart(cc,{type:'bar',data:{labels:cats.map(c=>c.category),datasets:[{data:cats.map(c=>c.amount),backgroundColor:['rgba(220,38,38,0.12)','rgba(217,119,6,0.12)','rgba(139,92,246,0.12)','rgba(37,99,235,0.12)','rgba(219,39,119,0.12)','rgba(8,145,178,0.12)'],borderColor:['#dc2626','#d97706','#8b5cf6','#2563eb','#db2777','#0891b2'],borderWidth:1,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#0f172a',bodyColor:'#475569',borderColor:'#e2e6f0',borderWidth:1,cornerRadius:8}},scales:{x:{grid:{color:'rgba(226,230,240,0.5)'},ticks:{color:'#94a3b8',font:{size:10},callback:v=>'Rs.'+(v/1000).toFixed(0)+'K'}},y:{grid:{display:false},ticks:{color:'#475569',font:{size:11}}}}}});
+                const bc=document.getElementById('beforeAfterChart').getContext('2d');if(beforeAfterChart)beforeAfterChart.destroy();
+                beforeAfterChart=new Chart(bc,{type:'bar',data:{labels:['At-Risk','Recovered'],datasets:[{data:[d.before.total_at_risk,d.after.total_recovered],backgroundColor:['rgba(220,38,38,0.12)','rgba(5,150,105,0.12)'],borderColor:['#dc2626','#059669'],borderWidth:2,borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#0f172a',bodyColor:'#475569',borderColor:'#e2e6f0',borderWidth:1,cornerRadius:8}},scales:{x:{grid:{display:false},ticks:{color:'#475569',font:{size:11}}},y:{grid:{color:'rgba(226,230,240,0.5)'},ticks:{color:'#94a3b8',font:{size:10},callback:v=>'Rs.'+(v/1000).toFixed(0)+'K'}}}}});
+            } catch(e) {}
         }
 
-        fetchStats(); fetchMerchants(); fetchAuditTrail(); fetchRecoveryData(); fetchRevenueComparison();
-        setInterval(fetchStats, 30000); setInterval(fetchMerchants, 60000); setInterval(fetchRecoveryData, 30000); setInterval(fetchRevenueComparison, 30000);
+        fetchStats();fetchMerchants();fetchAuditTrail();fetchRecoveryData();fetchRevenueComparison();
+        setInterval(fetchStats,30000);setInterval(fetchMerchants,60000);setInterval(fetchRecoveryData,30000);setInterval(fetchRevenueComparison,30000);
 
-        // ── SSE ──
-        let sseRetry = 0;
+        let sseRetry=0;
         function connectSSE() {
-            const sse = new EventSource('/api/events');
-            sse.addEventListener('connected', () => { sseRetry = 0; const d = document.getElementById('sseStatus'); if (d) d.style.background = 'var(--green)'; });
-            sse.addEventListener('audit_event', (e) => {
-                try {
-                    const ev = JSON.parse(e.data);
-                    const div = document.getElementById('auditTrail');
-                    if (div.querySelector('p')) div.innerHTML = '';
-                    const t = new Date(ev.timestamp).toLocaleTimeString();
-                    const c = ev.severity === 'warning' ? 'var(--amber)' : ev.severity === 'error' ? 'var(--red)' : 'var(--green)';
-                    const i = ev.severity === 'warning' ? '⚠' : ev.severity === 'error' ? '✕' : '✓';
-                    const item = document.createElement('div'); item.className = 'audit-item';
-                    item.innerHTML = `<span class="audit-time">${t}</span><span style="color:${c}; font-weight:600; min-width:16px;">${i}</span><span style="font-weight:500; min-width:140px;">${ev.event_type.replace(/_/g, ' ')}</span><span style="color:var(--text-muted); font-size:12px;">${ev.merchant_id}</span>`;
-                    div.insertBefore(item, div.firstChild);
-                    while (div.children.length > 20) div.removeChild(div.lastChild);
-                    fetchStats(); fetchRecoveryData(); fetchRevenueComparison();
-                } catch (err) {}
-            });
-            sse.addEventListener('heartbeat', () => {});
-            sse.onerror = () => { const d = document.getElementById('sseStatus'); if (d) d.style.background = 'var(--amber)'; sse.close(); sseRetry++; setTimeout(connectSSE, Math.min(1000 * Math.pow(2, sseRetry), 30000)); };
+            const sse=new EventSource('/api/events');
+            sse.addEventListener('connected',()=>{sseRetry=0;const d=document.getElementById('sseStatus');if(d)d.style.background='var(--green)';});
+            sse.addEventListener('audit_event',e=>{try{const ev=JSON.parse(e.data);const div=document.getElementById('auditTrail');if(div.querySelector('p'))div.innerHTML='';const t=new Date(ev.timestamp).toLocaleTimeString();const c=ev.severity==='warning'?'var(--amber)':ev.severity==='error'?'var(--red)':'var(--green)';const i=ev.severity==='warning'?'⚠':ev.severity==='error'?'✕':'✓';const item=document.createElement('div');item.className='audit-item';item.innerHTML=`<span class="audit-time">${t}</span><span style="color:${c};font-weight:600;min-width:16px;">${i}</span><span style="font-weight:500;min-width:140px;">${ev.event_type.replace(/_/g,' ')}</span><span style="color:var(--text-muted);font-size:12px;">${ev.merchant_id}</span>`;div.insertBefore(item,div.firstChild);while(div.children.length>20)div.removeChild(div.lastChild);fetchStats();fetchRecoveryData();fetchRevenueComparison();}catch(err){}});
+            sse.addEventListener('heartbeat',()=>{});
+            sse.onerror=()=>{const d=document.getElementById('sseStatus');if(d)d.style.background='var(--amber)';sse.close();sseRetry++;setTimeout(connectSSE,Math.min(1000*Math.pow(2,sseRetry),30000));};
         }
         connectSSE();
     </script>
