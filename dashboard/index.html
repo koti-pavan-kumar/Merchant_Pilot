@@ -113,7 +113,7 @@
         .hero-container {
             max-width: 1440px;
             margin: 0 auto;
-            padding: 80px 40px;
+            padding: 100px 40px 80px;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 60px;
@@ -268,25 +268,37 @@
             50% { opacity: 0.5; }
         }
 
-        /* ── Header ── */
-        .header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            padding: 14px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(248, 249, 252, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+        /* ── Top Navbar ── */
+        .topnav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 200;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 8px rgba(15, 23, 42, 0.04);
         }
 
-        .header-left { display: flex; align-items: center; gap: 12px; }
+        .topnav-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 40px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-        .header-logo {
-            width: 38px; height: 38px;
+        .topnav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .topnav-logo {
+            width: 36px; height: 36px;
             background: linear-gradient(135deg, var(--purple), var(--blue));
             border-radius: 10px;
             display: flex;
@@ -294,19 +306,65 @@
             justify-content: center;
             color: white;
             font-weight: 800;
-            font-size: 16px;
+            font-size: 15px;
             font-family: 'Space Grotesk', sans-serif;
-            box-shadow: 0 2px 12px rgba(99, 72, 255, 0.25);
+            box-shadow: 0 2px 10px rgba(99, 72, 255, 0.25);
         }
 
-        .header h1 {
+        .topnav-brand {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--text);
+            line-height: 1.2;
         }
 
-        .header-right { display: flex; align-items: center; gap: 16px; }
+        .topnav-sub {
+            font-size: 10px;
+            color: var(--purple);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .topnav-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            overflow-x: auto;
+        }
+
+        .topnav-link {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 200ms;
+            white-space: nowrap;
+        }
+
+        .topnav-link:hover {
+            background: rgba(99, 72, 255, 0.05);
+            color: var(--purple);
+        }
+
+        .topnav-link.active {
+            background: rgba(99, 72, 255, 0.08);
+            color: var(--purple);
+            font-weight: 600;
+        }
+
+        .topnav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
 
         .live-badge {
             display: flex; align-items: center; gap: 8px;
@@ -324,10 +382,7 @@
             animation: pulse 2s ease-in-out infinite;
         }
 
-        .timestamp {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px; color: var(--text-muted);
-        }
+
 
         /* ── Main ── */
         .main {
@@ -608,7 +663,8 @@
 
         /* ── Responsive ── */
         @media (max-width: 1024px) {
-            .hero-container { grid-template-columns: 1fr; text-align: center; padding: 60px 24px; }
+            .topnav-links { display: none; }
+            .hero-container { grid-template-columns: 1fr; text-align: center; padding: 80px 24px 60px; }
             .hero-sub { margin: 0 auto 32px; }
             .hero-actions { justify-content: center; }
             .hero-image { display: none; }
@@ -630,6 +686,30 @@
 <body>
     <canvas id="three-canvas"></canvas>
     <div class="mesh-overlay"></div>
+
+    <!-- ═══ TOP NAVBAR ═══ -->
+    <nav class="topnav" id="topnav">
+        <div class="topnav-inner">
+            <div class="topnav-left">
+                <div class="topnav-logo">M</div>
+                <div>
+                    <div class="topnav-brand">MerchantPilot AI</div>
+                    <div class="topnav-sub">Razorpay Buildathon 2026</div>
+                </div>
+            </div>
+            <div class="topnav-links">
+                <a href="#controls" class="topnav-link active"><i data-lucide="sliders" style="width:14px;height:14px"></i> Controls</a>
+                <a href="#overview" class="topnav-link"><i data-lucide="layout-dashboard" style="width:14px;height:14px"></i> Overview</a>
+                <a href="#intelligence" class="topnav-link"><i data-lucide="brain" style="width:14px;height:14px"></i> Intelligence</a>
+                <a href="#merchants" class="topnav-link"><i data-lucide="users" style="width:14px;height:14px"></i> Merchants</a>
+                <a href="#recovery" class="topnav-link"><i data-lucide="rotate-ccw" style="width:14px;height:14px"></i> Recovery</a>
+                <a href="#impact" class="topnav-link"><i data-lucide="bar-chart-2" style="width:14px;height:14px"></i> Impact</a>
+            </div>
+            <div class="topnav-right">
+                <div class="live-badge"><span id="sseStatus" class="live-dot"></span> <span id="apiStatus">Connecting</span></div>
+            </div>
+        </div>
+    </nav>
 
     <!-- ═══ HERO ═══ -->
     <section class="hero" id="hero">
@@ -660,21 +740,12 @@
         </div>
     </section>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <div class="header-logo">M</div>
-            <h1>MerchantPilot AI</h1>
-        </div>
-        <div class="header-right">
-            <div class="live-badge"><span id="sseStatus" class="live-dot"></span> <span id="apiStatus">Connecting</span></div>
-            <div class="timestamp" id="lastUpdated">--</div>
-        </div>
-    </header>
+
 
     <!-- ═══ DASHBOARD ═══ -->
     <main class="main" id="dashboard">
         <!-- Controls -->
+        <div id="controls"></div>
         <div class="section-label reveal"><span class="section-number">01</span><span class="section-title">Controls</span></div>
         <div class="btn-group reveal">
             <button onclick="runLiveDemo()" class="btn btn-demo" id="runDemoBtn"><i data-lucide="play" style="width:16px;height:16px"></i> Run Live Demo</button>
@@ -699,6 +770,7 @@
         </div>
 
         <!-- Section: Overview with Image -->
+        <div id="overview"></div>
         <div class="section-label reveal"><span class="section-number">02</span><span class="section-title">Overview</span></div>
 
         <div class="section-with-image reveal">
@@ -712,7 +784,7 @@
                     <div class="metric-card"><div class="metric-card-inner"><div class="metric-icon pink"><i data-lucide="activity" style="width:20px;height:20px"></i></div><div class="metric-label">Audit Events</div><div class="metric-value pink" id="auditEvents">--</div></div></div>
                 </div>
             </div>
-            <img class="section-image" src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=700&q=80" alt="Data Analytics" onerror="this.style.background='linear-gradient(135deg,#eef2ff,#f0f2f8)';this.alt='Analytics Dashboard'">
+            <img class="section-image" src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=700&q=80" alt="Data Dashboard" onerror="this.style.background='linear-gradient(135deg,#eef2ff,#f0f2f8)';this.alt='Data Dashboard'">
         </div>
 
         <!-- Recovery Card (hidden initially) -->
@@ -724,6 +796,7 @@
         </div>
 
         <!-- Section: Intelligence -->
+        <div id="intelligence"></div>
         <div class="section-label reveal"><span class="section-number">03</span><span class="section-title">Intelligence</span></div>
 
         <div class="section-with-image reverse reveal">
@@ -758,6 +831,7 @@
         </div>
 
         <!-- Section: Merchants -->
+        <div id="merchants"></div>
         <div class="section-label reveal"><span class="section-number">04</span><span class="section-title">Merchant Health Analysis</span></div>
 
         <div class="section-with-image reveal">
@@ -782,6 +856,7 @@
         </div>
 
         <!-- Section: Recovery -->
+        <div id="recovery"></div>
         <div class="section-label reveal"><span class="section-number">05</span><span class="section-title">Recovery & Audit</span></div>
 
         <div class="section-with-image reverse reveal">
@@ -805,6 +880,7 @@
         </div>
 
         <!-- Section: Impact -->
+        <div id="impact"></div>
         <div class="section-label reveal"><span class="section-number">06</span><span class="section-title">Revenue Impact</span></div>
 
         <div class="card reveal">
@@ -902,6 +978,21 @@
         })();
 
         lucide.createIcons();
+
+        // ── Scroll Spy for Nav ──
+        const navLinks = document.querySelectorAll('.topnav-link');
+        const sections = ['controls', 'overview', 'intelligence', 'merchants', 'recovery', 'impact'];
+        function updateActiveNav() {
+            let current = 'controls';
+            for (const id of sections) {
+                const el = document.getElementById(id);
+                if (el && el.getBoundingClientRect().top <= 120) current = id;
+            }
+            navLinks.forEach(link => {
+                link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+            });
+        }
+        window.addEventListener('scroll', updateActiveNav, { passive: true });
 
         // ── Scroll Reveal ──
         const obs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }), { threshold: 0.1 });
