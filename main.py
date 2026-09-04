@@ -424,6 +424,10 @@ async def run_demo_endpoint():
         "recommendations_count": len(recommendations),
     })
 
+    # Store context for simulate-payment endpoint
+    global _demo_context
+    _demo_context = {}
+
     # Step 3: Create real Razorpay payment link
     amount = int(merchant.get("total_revenue", 50000) * 0.05 * 100)  # 5% of revenue in paise
     payment_link_result = razorpay.execute_with_retry(
@@ -496,6 +500,14 @@ async def run_demo_endpoint():
     # Get total audit events
     audit_summary = audit.get_system_summary()
 
+    # Store context for /api/demo/simulate-payment
+    _demo_context = {
+        "merchant_id": merchant_id,
+        "amount": amount // 100,
+        "payment_link": payment_link_result.get("short_url", ""),
+        "payment_link_id": payment_link_result.get("payment_link_id", ""),
+    }
+
     return {
         "success": True,
         "steps": steps,
@@ -508,6 +520,103 @@ async def run_demo_endpoint():
         "amount_recovered": amount // 100,
         "total_audit_events": audit_summary.get("total_events", 0),
         "razorpay_mode": razorpay.get_mode(),
+    }
+
+
+# Store the last demo context so simulate-payment can use it
+_demo_context = {}
+
+
+@app.post("/api/demo/simulate-payment")
+async def simulate_payment(request: Request):
+    """
+    Simulate a customer paying (or failing) via the payment link.
+    This triggers the webhook handler and shows real-time recovery.
+    
+    Body: {"outcome": "success" | "failure"}
+    """
+    global _demo_context
+    body = await request.json()
+    outcome = body.get("outcome", "success")
+
+    if not _demo_context:
+        return JSONResponse(status_code=400, content={"error": "No active demo. Run demo first."})
+
+    merchant_id = _demo_context.get("merchant_id", "unknown")
+    amount = _demo_context.get("amount", 0)
+    webhook = WebhookHandler()
+    audit = AuditTrail()
+
+    event_log = []
+
+    if outcome == "failure":
+        # Simulate payment failure
+        payment_id = f"pay_{uuid.uuid4().hex[:16]}"
+        failure_payload = {
+            "id": payment_id,
+            "amount": amount * 100,
+            "status": "failed",
+            "error_code": "bank_declined",
+            "error_description": "Customer bank declined the transaction",
+            "notes": {"merchant_id": merchant_id},
+        }
+        result = webhook.handle_event("payment.failed", failure_payload)
+
+        event_log.append({
+            "event": "payment.failed",
+            "detail": f"Payment {payment_id} declined by bank",
+            "action": result.get("action_taken", "none"),
+            "retry_link": result.get("details", {}).get("retry_link", ""),
+            "timestamp": datetime.now().isoformat(),
+        })
+
+        # Now simulate successful retry after 2 seconds
+        retry_id = f"pay_{uuid.uuid4().hex[:16]}"
+        success_payload = {
+            "id": retry_id,
+            "amount": amount * 100,
+            "method": "upi",
+            "status": "captured",
+            "notes": {"merchant_id": merchant_id},
+        }
+        result2 = webhook.handle_event("payment.captured", success_payload)
+
+        event_log.append({
+            "event": "payment.captured",
+            "detail": f"Retry {retry_id} successful via UPI",
+            "action": result2.get("action_taken", "none"),
+            "amount_recovered": amount,
+            "timestamp": datetime.now().isoformat(),
+        })
+
+    else:
+        # Direct success
+        payment_id = f"pay_{uuid.uuid4().hex[:16]}"
+        success_payload = {
+            "id": payment_id,
+            "amount": amount * 100,
+            "method": body.get("method", "upi"),
+            "status": "captured",
+            "notes": {"merchant_id": merchant_id},
+        }
+        result = webhook.handle_event("payment.captured", success_payload)
+
+        event_log.append({
+            "event": "payment.captured",
+            "detail": f"Payment {payment_id} captured via {body.get('method', 'upi')}",
+            "action": result.get("action_taken", "none"),
+            "amount_recovered": amount,
+            "timestamp": datetime.now().isoformat(),
+        })
+
+    audit_summary = audit.get_system_summary()
+
+    return {
+        "success": True,
+        "outcome": outcome,
+        "events": event_log,
+        "amount_recovered": amount if outcome == "success" or outcome == "failure" else 0,
+        "total_audit_events": audit_summary.get("total_events", 0),
     }
 
 
