@@ -601,12 +601,8 @@
             <p>AI-Powered Merchant Health & Growth Automation</p>
         </div>
         <div class="header-right">
-            <div class="live-badge" title="Real-time event stream">
+            <div class="live-badge" title="Real-time SSE stream">
                 <span id="sseStatus" style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-warning); display: inline-block; margin-right: 6px;"></span>
-                <span>Live</span>
-            </div>
-            <div class="live-badge">
-                <span class="live-dot"></span>
                 <span id="apiStatus">Connecting</span>
             </div>
             <div class="timestamp" id="lastUpdated">--</div>
@@ -833,6 +829,41 @@
                 </div>
                 <div id="auditTrail">
                     <p style="color: var(--color-muted); font-size: 13px;">Loading audit events...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Impact: Before vs After -->
+        <div class="card" style="margin-top: 20px;">
+            <div class="card-title">
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+                Revenue Impact — Before vs After MerchantPilot
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="color: var(--color-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">At-Risk Revenue</div>
+                    <div style="font-family: 'Calistoga', serif; font-size: 28px; color: var(--color-danger); margin-top: 4px;" id="totalAtRisk">--</div>
+                    <div style="color: var(--color-muted); font-size: 12px; margin-top: 4px;" id="atRiskMerchants">-- merchants affected</div>
+                </div>
+                <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="color: var(--color-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Revenue Recovered</div>
+                    <div style="font-family: 'Calistoga', serif; font-size: 28px; color: var(--color-success); margin-top: 4px;" id="totalRecoveredImpact">--</div>
+                    <div style="color: var(--color-muted); font-size: 12px; margin-top: 4px;" id="recoveryActionsImpact">-- recovery actions</div>
+                </div>
+                <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="color: var(--color-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">Recovery Rate</div>
+                    <div style="font-family: 'Calistoga', serif; font-size: 28px; color: var(--color-primary); margin-top: 4px;" id="recoveryRatePct">--%</div>
+                    <div style="color: var(--color-muted); font-size: 12px; margin-top: 4px;" id="remainingAtRisk">-- remaining at risk</div>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="position: relative; height: 220px;">
+                    <div style="color: var(--color-muted); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; text-align: center;">At-Risk by Category</div>
+                    <canvas id="atRiskByCategoryChart"></canvas>
+                </div>
+                <div style="position: relative; height: 220px;">
+                    <div style="color: var(--color-muted); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; text-align: center;">Before vs After</div>
+                    <canvas id="beforeAfterChart"></canvas>
                 </div>
             </div>
         </div>
@@ -1337,14 +1368,115 @@
             }
         }
 
+        // ── Revenue Impact Chart (Before vs After) ──
+        let atRiskChart = null;
+        let beforeAfterChart = null;
+
+        async function fetchRevenueComparison() {
+            try {
+                const response = await fetch('/api/revenue-comparison');
+                const data = await response.json();
+
+                // Update stat cards
+                document.getElementById('totalAtRisk').textContent = 'Rs.' + data.before.total_at_risk.toLocaleString();
+                document.getElementById('atRiskMerchants').textContent = data.before.merchants_at_risk + ' merchants affected';
+                document.getElementById('totalRecoveredImpact').textContent = 'Rs.' + data.after.total_recovered.toLocaleString();
+                document.getElementById('recoveryActionsImpact').textContent = data.after.recovery_count + ' recovery actions';
+                document.getElementById('recoveryRatePct').textContent = data.recovery_rate + '%';
+                document.getElementById('remainingAtRisk').textContent = 'Rs.' + data.remaining_at_risk.toLocaleString() + ' remaining at risk';
+
+                // At-Risk by Category (horizontal bar)
+                const catCtx = document.getElementById('atRiskByCategoryChart').getContext('2d');
+                const cats = data.before.top_categories || [];
+                if (atRiskChart) atRiskChart.destroy();
+                atRiskChart = new Chart(catCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: cats.map(c => c.category),
+                        datasets: [{
+                            label: 'At-Risk Revenue',
+                            data: cats.map(c => c.amount),
+                            backgroundColor: [
+                                'rgba(239,68,68,0.6)', 'rgba(245,158,11,0.6)', 'rgba(168,85,247,0.6)',
+                                'rgba(59,130,246,0.6)', 'rgba(236,72,153,0.6)', 'rgba(20,184,166,0.6)',
+                            ],
+                            borderColor: ['#EF4444','#F59E0B','#A855F7','#3B82F6','#EC4899','#14B8A6'],
+                            borderWidth: 1,
+                            borderRadius: 4,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1E293B', titleColor: '#F8FAFC', bodyColor: '#F8FAFC',
+                                borderColor: '#334155', borderWidth: 1,
+                                callbacks: { label: (ctx) => 'Rs.' + ctx.parsed.x.toLocaleString() }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { color: 'rgba(51,65,85,0.3)' }, ticks: { color: '#64748B', font: { size: 10 }, callback: v => 'Rs.' + (v/1000).toFixed(0) + 'K' } },
+                            y: { grid: { display: false }, ticks: { color: '#94A3B8', font: { size: 11 } } }
+                        }
+                    }
+                });
+
+                // Before vs After (grouped bar)
+                const baCtx = document.getElementById('beforeAfterChart').getContext('2d');
+                if (beforeAfterChart) beforeAfterChart.destroy();
+                const riskLevels = Object.keys(data.before.by_risk_level);
+                const riskValues = riskLevels.map(k => Math.round(data.before.by_risk_level[k]));
+                const recoveredVal = Math.round(data.after.total_recovered);
+
+                beforeAfterChart = new Chart(baCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['At-Risk (Before)', 'Recovered (After)'],
+                        datasets: [{
+                            label: 'Revenue',
+                            data: [data.before.total_at_risk, data.after.total_recovered],
+                            backgroundColor: ['rgba(239,68,68,0.6)', 'rgba(16,185,129,0.6)'],
+                            borderColor: ['#EF4444', '#10B981'],
+                            borderWidth: 2,
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1E293B', titleColor: '#F8FAFC', bodyColor: '#F8FAFC',
+                                borderColor: '#334155', borderWidth: 1,
+                                callbacks: { label: (ctx) => 'Rs.' + ctx.parsed.y.toLocaleString() }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: '#94A3B8', font: { size: 11 } } },
+                            y: { grid: { color: 'rgba(51,65,85,0.3)' }, ticks: { color: '#64748B', font: { size: 10 }, callback: v => 'Rs.' + (v/1000).toFixed(0) + 'K' } }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Failed to fetch revenue comparison:', error);
+            }
+        }
+
         // Fetch on load + auto-refresh every 30s
         fetchStats();
         fetchMerchants();
         fetchAuditTrail();
         fetchRecoveryData();
+        fetchRevenueComparison();
         setInterval(fetchStats, 30000);
         setInterval(fetchMerchants, 60000);
         setInterval(fetchRecoveryData, 30000);
+        setInterval(fetchRevenueComparison, 30000);
 
         // ── SSE: Real-time event stream ──
         let sseRetryCount = 0;
@@ -1387,6 +1519,7 @@
                     // Refresh stats
                     fetchStats();
                     fetchRecoveryData();
+                    fetchRevenueComparison();
                 } catch(err) { console.error('[SSE] Parse error:', err); }
             });
 

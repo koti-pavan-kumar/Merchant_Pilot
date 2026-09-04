@@ -771,6 +771,111 @@ async def get_recovery_history():
     }
 
 
+@app.get("/api/revenue-comparison")
+async def get_revenue_comparison():
+    """
+    Before/After revenue comparison.
+    Shows total at-risk revenue vs recovered amount for the impact chart.
+    """
+    data_dir = Path("data/synthetic")
+    merchants = []
+    if (data_dir / "merchants.json").exists():
+        with open(data_dir / "merchants.json") as f:
+            merchants = json.load(f)
+
+    audit = AuditTrail()
+    logs = audit.get_recent_logs(limit=500)
+
+    # Calculate at-risk revenue from merchants
+    total_at_risk = 0
+    at_risk_by_category = {}
+    at_risk_by_risk_level = {"critical": 0, "high": 0, "medium": 0, "low": 0}
+
+    for m in merchants:
+        failure_rate = m.get("failure_rate", 0)
+        refund_rate = m.get("refund_rate", 0)
+        days_inactive = m.get("days_since_last_transaction", 0)
+        revenue = m.get("total_revenue", 0)
+
+        risk_score = (failure_rate * 3 + refund_rate * 2 + min(days_inactive / 90, 1)) / 5
+
+        if risk_score > 0.2:  # At-risk threshold
+            at_risk_amount = revenue * risk_score
+            total_at_risk += at_risk_amount
+
+            cat = m.get("category", "Unknown")
+            at_risk_by_category[cat] = at_risk_by_category.get(cat, 0) + at_risk_amount
+
+            if risk_score > 0.6:
+                at_risk_by_risk_level["critical"] += at_risk_amount
+            elif risk_score > 0.4:
+                at_risk_by_risk_level["high"] += at_risk_amount
+            elif risk_score > 0.2:
+                at_risk_by_risk_level["medium"] += at_risk_amount
+            else:
+                at_risk_by_risk_level["low"] += at_risk_amount
+
+    # Calculate recovered from audit trail
+    total_recovered = 0
+    recovered_by_action = {"payment_retry": 0, "webhook_capture": 0, "other": 0}
+
+    for log in logs:
+        if log.event_type in ("revenue_recovered", "webhook_payment_captured"):
+            amount = log.details.get("amount", 0)
+            total_recovered += amount
+            method = log.details.get("method", "other")
+            if method in ("upi", "card", "netbanking"):
+                recovered_by_action["webhook_capture"] += amount
+            else:
+                recovered_by_action["payment_retry"] += amount
+
+    # Recovery rate
+    recovery_rate = (total_recovered / total_at_risk * 100) if total_at_risk > 0 else 0
+
+    # Top 5 at-risk merchants
+    at_risk_merchants = []
+    for m in merchants:
+        failure_rate = m.get("failure_rate", 0)
+        refund_rate = m.get("refund_rate", 0)
+        days_inactive = m.get("days_since_last_transaction", 0)
+        revenue = m.get("total_revenue", 0)
+        risk_score = (failure_rate * 3 + refund_rate * 2 + min(days_inactive / 90, 1)) / 5
+        if risk_score > 0.2:
+            at_risk_merchants.append({
+                "merchant_id": m.get("merchant_id"),
+                "business_name": m.get("business_name"),
+                "revenue": revenue,
+                "at_risk_amount": round(revenue * risk_score, 2),
+                "risk_score": round(risk_score, 2),
+            })
+    at_risk_merchants.sort(key=lambda x: x["at_risk_amount"], reverse=True)
+
+    # Top categories by at-risk revenue
+    top_categories = sorted(
+        [{"category": k, "amount": round(v, 2)} for k, v in at_risk_by_category.items()],
+        key=lambda x: x["amount"],
+        reverse=True
+    )[:6]
+
+    return {
+        "before": {
+            "total_at_risk": round(total_at_risk, 2),
+            "merchants_at_risk": len(at_risk_merchants),
+            "by_risk_level": {k: round(v, 2) for k, v in at_risk_by_risk_level.items()},
+            "top_categories": top_categories,
+            "top_merchants": at_risk_merchants[:5],
+        },
+        "after": {
+            "total_recovered": round(total_recovered, 2),
+            "recovery_count": len([l for l in logs if l.event_type in ("revenue_recovered", "webhook_payment_captured")]),
+            "by_action": {k: round(v, 2) for k, v in recovered_by_action.items()},
+        },
+        "recovery_rate": round(recovery_rate, 1),
+        "revenue_saved": round(total_recovered, 2),
+        "remaining_at_risk": round(max(0, total_at_risk - total_recovered), 2),
+    }
+
+
 # ── Real Payment Test ──────────────────────────────────
 
 import time
