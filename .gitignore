@@ -31,6 +31,7 @@ models/saved_models/
 
 # Data (generated)
 data/synthetic/
+data/razorpay_customers.json
 
 # Test cache
 .pytest_cache/
