@@ -935,44 +935,134 @@ async def create_test_order():
 async def capture_test_payment(request: Request):
     """
     Called by frontend after successful payment.
-    Logs the real captured payment in audit trail.
+    Verifies actual payment status with Razorpay API, then logs.
     """
     body = await request.json()
     razorpay_payment_id = body.get("razorpay_payment_id", "")
     razorpay_order_id = body.get("razorpay_order_id", "")
     razorpay_signature = body.get("razorpay_signature", "")
 
+    razorpay = RazorpayClient()
     audit = AuditTrail()
     webhook = WebhookHandler()
 
-    # Log the real payment capture
+    # Verify actual payment status with Razorpay API
+    actual_status = "unknown"
+    actual_method = "unknown"
+    actual_amount = 0
+    verification_source = "callback"
+
+    if not razorpay.simulation_mode and razorpay_payment_id:
+        try:
+            payment_resp = razorpay.client.payment.fetch(razorpay_payment_id)
+            actual_status = payment_resp.get("status", "unknown")
+            actual_method = payment_resp.get("method", "unknown")
+            actual_amount = payment_resp.get("amount", 0) / 100  # paise to rupees
+            verification_source = "razorpay_api"
+            logger.info(f"[VERIFY] Payment {razorpay_payment_id}: status={actual_status}, method={actual_method}, amount=Rs.{actual_amount}")
+        except Exception as e:
+            logger.error(f"[VERIFY] Failed to fetch payment {razorpay_payment_id}: {e}")
+            actual_status = body.get("status", "authorized")
+    else:
+        actual_status = "captured"
+        actual_amount = 10
+        actual_method = body.get("method", "card")
+
+    # If payment is only authorized, try to capture it
+    if actual_status == "authorized" and not razorpay.simulation_mode:
+        try:
+            capture_resp = razorpay.client.payment.capture(razorpay_payment_id, body.get("amount", 1000))
+            actual_status = capture_resp.get("status", "captured")
+            logger.info(f"[CAPTURE] Payment {razorpay_payment_id} captured: {actual_status}")
+        except Exception as e:
+            logger.warning(f"[CAPTURE] Auto-capture failed for {razorpay_payment_id}: {e}")
+
+    is_captured = actual_status in ("captured", "paid")
+
+    # Log the verified payment
     audit.log_event(
         merchant_id="M0001",
-        event_type="test_payment_captured",
+        event_type="real_payment_verified" if is_captured else "real_payment_authorized",
         details={
             "payment_id": razorpay_payment_id,
             "order_id": razorpay_order_id,
-            "amount": 10,
+            "actual_status": actual_status,
+            "method": actual_method,
+            "amount": actual_amount or 10,
+            "verification_source": verification_source,
         },
+        severity="info" if is_captured else "warning",
     )
 
-    # Fire webhook handler for real captured payment
-    simulated_success = {
-        "id": razorpay_payment_id,
-        "amount": 1000,
-        "method": body.get("method", "card"),
-        "status": "captured",
-        "notes": {"merchant_id": "M0001", "order_id": razorpay_order_id},
-    }
-    webhook.handle_event("payment.captured", simulated_success)
+    # Fire webhook handler for captured payment
+    if is_captured:
+        webhook.handle_event("payment.captured", {
+            "id": razorpay_payment_id,
+            "amount": (actual_amount or 10) * 100,
+            "method": actual_method,
+            "status": "captured",
+            "notes": {"merchant_id": "M0001", "order_id": razorpay_order_id},
+        })
 
     return {
         "success": True,
         "payment_id": razorpay_payment_id,
         "order_id": razorpay_order_id,
-        "amount": 10,
-        "message": "Payment captured and logged in audit trail",
+        "actual_status": actual_status,
+        "is_captured": is_captured,
+        "method": actual_method,
+        "amount": actual_amount or 10,
+        "verification_source": verification_source,
+        "message": f"Payment verified: {actual_status}" + (" (auto-captured)" if actual_status == "authorized" else ""),
     }
+
+
+@app.get("/api/verify-payment/{payment_id}")
+async def verify_payment(payment_id: str):
+    """
+    Verify a payment's actual status directly from Razorpay API.
+    Returns the real status, method, amount, and whether it's captured.
+    """
+    razorpay = RazorpayClient()
+
+    if razorpay.simulation_mode:
+        return {
+            "success": False,
+            "error": "Razorpay keys not configured",
+            "status": "unknown",
+        }
+
+    try:
+        response = razorpay.client.payment.fetch(payment_id)
+        status = response.get("status", "unknown")
+        method = response.get("method", "unknown")
+        amount = response.get("amount", 0) / 100
+        currency = response.get("currency", "INR")
+        created_at = response.get("created_at", 0)
+        captured_at = response.get("captured_at", 0)
+        fee = response.get("fee", 0) / 100
+        tax = response.get("tax", 0) / 100
+
+        return {
+            "success": True,
+            "payment_id": payment_id,
+            "status": status,
+            "is_captured": status in ("captured", "paid"),
+            "method": method,
+            "amount": amount,
+            "currency": currency,
+            "fee": fee,
+            "tax": tax,
+            "net_amount": amount - fee - tax,
+            "created_at": datetime.fromtimestamp(created_at).isoformat() if created_at else None,
+            "captured_at": datetime.fromtimestamp(captured_at).isoformat() if captured_at else None,
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "status": "error",
+        }
 
 
 @app.get("/checkout", response_class=HTMLResponse)
@@ -1067,19 +1157,56 @@ async def checkout_page():
                     description: 'Real Payment Test (₹10)',
                     order_id: data.order_id,
                     handler: async function(response) {
-                        // Payment successful!
+                        // Payment successful! Verify with Razorpay API
+                        btn.textContent = 'Verifying payment...';
+                        btn.style.background = '#F59E0B';
+
                         try {
-                            await fetch('/api/test-payment/capture', {
+                            const verifyResp = await fetch('/api/test-payment/capture', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(response),
                             });
-                        } catch(e) { console.error('Capture log failed:', e); }
+                            const verifyData = await verifyResp.json();
 
-                        document.getElementById('successBox').style.display = 'block';
-                        document.getElementById('successDetail').textContent = `Payment ID: ${response.razorpay_payment_id}`;
-                        btn.textContent = 'Paid!';
-                        btn.style.background = 'var(--green)';
+                            const successBox = document.getElementById('successBox');
+                            const successDetail = document.getElementById('successDetail');
+                            successBox.style.display = 'block';
+
+                            if (verifyData.is_captured) {
+                                successBox.querySelector('h2').textContent = 'Payment Captured!';
+                                successBox.style.borderColor = 'var(--green)';
+                                successBox.style.background = 'rgba(16,185,129,0.1)';
+                                successDetail.innerHTML = `
+                                    <span style="color: var(--green); font-weight: 700;">\u2713 CAPTURED</span><br>
+                                    Payment ID: ${verifyData.payment_id}<br>
+                                    Status: ${verifyData.actual_status}<br>
+                                    Method: ${verifyData.method}<br>
+                                    Amount: Rs.${verifyData.amount}<br>
+                                    Verified via: ${verifyData.verification_source}
+                                `;
+                                btn.textContent = 'Captured!';
+                                btn.style.background = 'var(--green)';
+                            } else {
+                                successBox.querySelector('h2').textContent = 'Payment Authorized (Not Captured)';
+                                successBox.style.borderColor = 'var(--gold)';
+                                successBox.style.background = 'rgba(245,158,11,0.1)';
+                                successDetail.innerHTML = `
+                                    <span style="color: var(--gold); font-weight: 700;">\u26a0 AUTHORIZED ONLY</span><br>
+                                    Payment ID: ${verifyData.payment_id}<br>
+                                    Status: ${verifyData.actual_status}<br>
+                                    The payment was authorized but not yet captured.<br>
+                                    In test mode, this is normal — the bank will settle it.
+                                `;
+                                btn.textContent = 'Authorized';
+                                btn.style.background = 'var(--gold)';
+                            }
+                        } catch(e) {
+                            document.getElementById('successBox').style.display = 'block';
+                            document.getElementById('successDetail').textContent = `Payment ID: ${response.razorpay_payment_id} (verification failed: ${e.message})`;
+                            btn.textContent = 'Paid!';
+                            btn.style.background = 'var(--green)';
+                        }
                     },
                     prefill: {
                         name: 'Test User',
@@ -1271,10 +1398,10 @@ async def test_payment_page():
         </div>
 
         <!-- Success -->
-        <div class="success-box" id="successBox" style="display: none;">
-            <h3>Payment Captured!</h3>
-            <p style="margin-top: 8px;">₹10 received via test UPI</p>
-            <p style="color: var(--muted); font-size: 13px; margin-top: 8px;">Check your Razorpay dashboard (TEST mode) to verify</p>
+        <div class="success-box" id="successBox" style="display: none; border: 1px solid var(--green); border-radius: 12px; padding: 24px; margin-top: 20px; background: rgba(16,185,129,0.05);">
+            <h3 style="margin: 0 0 12px 0;">Payment Captured!</h3>
+            <div id="successDetail" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.8; color: var(--text);"></div>
+            <p style="color: var(--muted); font-size: 13px; margin-top: 12px;">Verify in Razorpay Dashboard → Payments tab</p>
         </div>
 
         <!-- Log -->
