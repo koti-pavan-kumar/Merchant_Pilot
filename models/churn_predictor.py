@@ -127,10 +127,16 @@ class ChurnPredictor:
         
         return predictions, probabilities
     
-    def predict_single(self, merchant_features: np.ndarray) -> Dict[str, Any]:
+    def predict_single(self, merchant_features) -> Dict[str, Any]:
         """Predict churn for a single merchant."""
         if self.pipeline is None:
             raise ValueError("Model not trained yet")
+        
+        # Convert to DataFrame with feature names to avoid sklearn warnings
+        if not isinstance(merchant_features, pd.DataFrame):
+            merchant_features = pd.DataFrame(
+                merchant_features, columns=self.feature_names
+            )
         
         prediction = self.pipeline.predict(merchant_features)[0]
         probability = self.pipeline.predict_proba(merchant_features)[0, 1]
@@ -147,24 +153,18 @@ class ChurnPredictor:
             "model_version": self.model_version
         }
     
-    def _identify_risk_factors(self, features: np.ndarray) -> List[str]:
+    def _identify_risk_factors(self, features) -> List[str]:
         """Identify top risk factors based on feature importance."""
         if not hasattr(self.model, 'feature_importances_'):
             return ["insufficient_data"]
         
-        # Get feature importance
         importance = self.model.feature_importances_
-        
-        # Map to feature names
         feature_importance = list(zip(self.feature_names, importance))
-        
-        # Sort by importance
         feature_importance.sort(key=lambda x: x[1], reverse=True)
         
-        # Return top 3 risk factors
         risk_factors = []
-        for feature, imp in feature_importance[:3]:
-            if imp > 0.1:  # Only include significant features
+        for feature, imp in feature_importance[:5]:
+            if imp > 0.05:
                 risk_factors.append(feature.replace('_', ' ').title())
         
         return risk_factors if risk_factors else ["low_risk_profile"]

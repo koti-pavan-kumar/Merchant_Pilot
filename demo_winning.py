@@ -106,6 +106,11 @@ async def run_winning_demo():
     ok(f"Recall:    {metrics['recall']:.1%}")
     ok(f"F1 Score:  {metrics['f1']:.1%}")
     ok(f"ROC AUC:   {metrics['roc_auc']:.1%}")
+    ok(f"CV F1:     {metrics['cv_f1_mean']:.3f} +/- {metrics['cv_f1_std']:.3f}")
+    ok(f"Train: {metrics['training_samples']}, Test: {metrics['test_samples']}")
+    
+    # Save model so dashboard shows real metrics
+    predictor.save_model("models/saved_models")
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # STEP 4: AI Analysis (Gemini + Churn Model)
@@ -116,13 +121,13 @@ async def run_winning_demo():
     best_idx = 0
     best_prob = 0
     for i in range(len(X)):
-        pred = predictor.predict_single(X.iloc[i:i+1].values)
+        pred = predictor.predict_single(X.iloc[i:i+1])
         if pred['churn_probability'] > best_prob:
             best_prob = pred['churn_probability']
             best_idx = i
 
     merchant = generator.merchant_profiles[best_idx]
-    prediction = predictor.predict_single(X.iloc[best_idx:best_idx+1].values)
+    prediction = predictor.predict_single(X.iloc[best_idx:best_idx+1])
 
     info(f"Merchant:    {merchant['business_name']} ({merchant['merchant_id']})")
     info(f"Revenue:     Rs.{merchant.get('total_revenue', 0):,.0f}")

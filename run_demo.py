@@ -67,6 +67,9 @@ async def run_demo():
     print(f"[OK] F1 Score: {metrics['f1']:.3f}")
     print(f"[OK] ROC AUC: {metrics['roc_auc']:.3f}")
     
+    # Save model so dashboard can show real metrics
+    predictor.save_model("models/saved_models")
+    
     # Step 4: Generate Recommendations
     print_step(4, "Generating Growth Recommendations")
     recommender = GrowthRecommender()
@@ -77,7 +80,7 @@ async def run_demo():
     
     # Get prediction for sample merchant
     sample_features = X.iloc[sample_merchant_idx:sample_merchant_idx+1]
-    prediction_result = predictor.predict_single(sample_features.values)
+    prediction_result = predictor.predict_single(sample_features)
     
     print(f"[OK] Merchant: {sample_merchant['business_name']} ({sample_merchant['merchant_id']})")
     print(f"[OK] Churn Probability: {prediction_result['churn_probability']:.2%}")
@@ -123,7 +126,9 @@ async def run_demo():
     
     # Step 8: Demo Summary
     print_header("Demo Summary")
-    print("[1] Churn Prediction: 87% Precision, 82% Recall")
+    print(f"[1] Churn Prediction: {metrics['precision']:.0%} Precision, {metrics['recall']:.0%} Recall")
+    print(f"    Cross-validated F1: {metrics['cv_f1_mean']:.3f} +/- {metrics['cv_f1_std']:.3f}")
+    print(f"    Training: {metrics['training_samples']} samples, Test: {metrics['test_samples']} samples")
     print("[2] Growth Recommendations: Personalized actions with expected impact")
     print("[3] Action Execution: Automated through Razorpay test-mode APIs")
     print("[4] Audit Trail: Complete logging of all system events")

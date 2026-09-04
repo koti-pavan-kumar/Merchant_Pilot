@@ -7,12 +7,44 @@ from data.schemas import AuditLog
 from config import get_settings
 
 class AuditTrail:
-    def __init__(self):
+    def __init__(self, log_file: Optional[str] = None):
         self.settings = get_settings()
         self.logs: List[AuditLog] = []
-        self.log_file = Path(self.settings.AUDIT_LOG_PATH)
+        if log_file:
+            self.log_file = Path(log_file)
+        else:
+            self.log_file = Path(self.settings.AUDIT_LOG_PATH)
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
+        # Load existing logs from file on init
+        self._load_logs_from_file()
         
+    def _load_logs_from_file(self):
+        """Load existing audit logs from file on startup."""
+        if not self.log_file.exists():
+            return
+        try:
+            with open(self.log_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        data = json.loads(line)
+                        log = AuditLog(
+                            log_id=data.get('log_id', ''),
+                            merchant_id=data.get('merchant_id', ''),
+                            action_id=data.get('action_id'),
+                            event_type=data.get('event_type', ''),
+                            details=data.get('details', {}),
+                            timestamp=datetime.fromisoformat(data.get('timestamp', datetime.now().isoformat())),
+                            severity=data.get('severity', 'info'),
+                        )
+                        self.logs.append(log)
+                    except (json.JSONDecodeError, ValueError):
+                        continue
+        except Exception:
+            pass
+
     def log_event(
         self,
         merchant_id: str,

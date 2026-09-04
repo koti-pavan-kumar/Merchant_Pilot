@@ -262,6 +262,116 @@
             display: flex;
             gap: 12px;
             margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .btn-demo {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            animation: demoGlow 2s infinite;
+        }
+
+        .btn-demo:hover {
+            background: linear-gradient(135deg, #34D399, #10B981);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-demo:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            animation: none;
+        }
+
+        @keyframes demoGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); }
+        }
+
+        /* ── Demo Progress Panel ── */
+        .demo-panel {
+            background: var(--color-card);
+            border: 1px solid var(--color-success);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            display: none;
+        }
+
+        .demo-panel.active { display: block; }
+
+        .demo-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .demo-panel-title {
+            font-family: 'Calistoga', serif;
+            font-size: 20px;
+            color: var(--color-success);
+        }
+
+        .demo-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 400ms ease;
+        }
+
+        .demo-step.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .demo-step:last-child { border-bottom: none; }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .step-number.success { background: rgba(16, 185, 129, 0.2); color: var(--color-success); border: 1px solid var(--color-success); }
+        .step-number.warning { background: rgba(245, 158, 11, 0.2); color: var(--color-warning); border: 1px solid var(--color-warning); }
+        .step-number.error { background: rgba(239, 68, 68, 0.2); color: var(--color-danger); border: 1px solid var(--color-danger); }
+        .step-number.pending { background: rgba(100, 116, 139, 0.2); color: var(--color-muted); border: 1px solid var(--color-muted); }
+
+        .step-content { flex: 1; }
+        .step-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .step-detail { font-size: 13px; color: var(--color-muted); line-height: 1.6; }
+        .step-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--color-muted); }
+
+        .demo-result {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .demo-result.active { display: block; }
+
+        .demo-result-title {
+            font-family: 'Calistoga', serif;
+            color: var(--color-success);
+            margin-bottom: 8px;
         }
 
         /* ── Audit Log ── */
@@ -313,10 +423,167 @@
             text-decoration: none;
         }
 
+        /* ── Merchant Table ── */
+        .merchant-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .merchant-table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-muted);
+            border-bottom: 1px solid var(--color-card-border);
+        }
+
+        .merchant-table td {
+            padding: 12px 16px;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+        }
+
+        .merchant-table tr {
+            cursor: pointer;
+            transition: background 150ms ease;
+        }
+
+        .merchant-table tbody tr:hover {
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .risk-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .risk-badge.critical { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
+        .risk-badge.high { background: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+        .risk-badge.medium { background: rgba(139, 92, 246, 0.15); color: #8B5CF6; }
+        .risk-badge.low { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+
+        /* ── Analysis Panel ── */
+        .analysis-panel {
+            background: var(--color-card);
+            border: 1px solid var(--color-card-border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .analysis-panel.active {
+            display: block;
+        }
+
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .analysis-merchant {
+            font-family: 'Calistoga', serif;
+            font-size: 20px;
+            color: var(--color-foreground);
+        }
+
+        .analysis-close {
+            background: none;
+            border: none;
+            color: var(--color-muted);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 4px 8px;
+        }
+
+        .analysis-close:hover { color: var(--color-danger); }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .analysis-section {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--color-card-border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .analysis-section h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-primary);
+            margin-bottom: 12px;
+        }
+
+        .analysis-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--color-foreground);
+        }
+
+        .recommendation-item {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--color-card-border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-item:last-child { margin-bottom: 0; }
+
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .rec-type {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--color-primary);
+        }
+
+        .rec-impact {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--color-success);
+        }
+
+        .rec-reasoning {
+            font-size: 13px;
+            color: var(--color-muted);
+            line-height: 1.6;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--color-card-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         /* ── Responsive ── */
         @media (max-width: 1024px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
             .dashboard-grid { grid-template-columns: 1fr; }
+            .analysis-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 640px) {
@@ -345,9 +612,23 @@
     <main class="main">
         <!-- Action Buttons -->
         <div class="btn-group">
+            <button onclick="runLiveDemo()" class="btn btn-demo" id="runDemoBtn">▶ Run Live Demo</button>
             <button onclick="fetchStats()" class="btn btn-primary">Refresh Data</button>
             <button onclick="window.location='/docs'" class="btn btn-outline">API Docs</button>
             <button onclick="window.open('https://dashboard.razorpay.com', '_blank')" class="btn btn-outline">Razorpay Dashboard</button>
+        </div>
+
+        <!-- Demo Progress Panel -->
+        <div class="demo-panel" id="demoPanel">
+            <div class="demo-panel-header">
+                <div class="demo-panel-title">Live Recovery Demo</div>
+                <span class="loading-spinner" id="demoSpinner"></span>
+            </div>
+            <div id="demoSteps"></div>
+            <div class="demo-result" id="demoResult">
+                <div class="demo-result-title">Recovery Complete</div>
+                <div id="demoResultDetail"></div>
+            </div>
         </div>
 
         <!-- Summary Metrics -->
@@ -371,6 +652,11 @@
                 <div class="metric-label">Audit Events</div>
                 <div class="metric-value purple" id="auditEvents">--</div>
                 <div class="metric-sub">Actions logged</div>
+            </div>
+            <div class="metric-card" style="display: none;" id="recoveryCard">
+                <div class="metric-label">Revenue Recovered</div>
+                <div class="metric-value green" id="revenueRecovered">Rs.0</div>
+                <div class="metric-sub">Via automated retries</div>
             </div>
         </div>
 
@@ -442,6 +728,54 @@
             </div>
         </div>
 
+        <!-- Merchant List with AI Analysis -->
+        <div class="card">
+            <div class="card-title">
+                <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Merchant Health Analysis
+            </div>
+            <table class="merchant-table">
+                <thead>
+                    <tr>
+                        <th>Merchant</th>
+                        <th>Category</th>
+                        <th>Revenue</th>
+                        <th>Failure Rate</th>
+                        <th>Days Inactive</th>
+                        <th>Risk</th>
+                    </tr>
+                </thead>
+                <tbody id="merchantList">
+                    <tr><td colspan="6" style="color: var(--color-muted); text-align: center;">Loading merchants...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- AI Analysis Panel (appears when merchant is clicked) -->
+        <div class="analysis-panel" id="analysisPanel">
+            <div class="analysis-header">
+                <div>
+                    <div class="analysis-merchant" id="analysisName">--</div>
+                    <div style="color: var(--color-muted); font-size: 13px; margin-top: 4px;" id="analysisId">--</div>
+                </div>
+                <button class="analysis-close" onclick="closeAnalysis()">&times;</button>
+            </div>
+            <div class="analysis-grid">
+                <div class="analysis-section">
+                    <h4>AI Analysis</h4>
+                    <div class="analysis-text" id="analysisText"><span class="loading-spinner"></span> Analyzing with Gemini AI...</div>
+                </div>
+                <div class="analysis-section">
+                    <h4>Risk Assessment</h4>
+                    <div class="analysis-text" id="riskAssessment">--</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <h4 style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-primary); margin-bottom: 12px;">AI Recommendations</h4>
+                <div id="recommendations"><span class="loading-spinner"></span> Generating recommendations...</div>
+            </div>
+        </div>
+
         <!-- Audit Trail -->
         <div class="card">
             <div class="card-title">
@@ -508,20 +842,8 @@
                 document.getElementById('paymentsCount').textContent = data.payments.count || 0;
                 document.getElementById('settlementsCount').textContent = data.settlements.count || 0;
 
-                // Audit Trail
-                const auditDiv = document.getElementById('auditTrail');
-                if (data.payments.recent && data.payments.recent.length > 0) {
-                    auditDiv.innerHTML = data.payments.recent.map(p => `
-                        <div class="audit-item">
-                            <span class="audit-badge ${mode === 'LIVE' ? 'live' : 'sim'}">${mode}</span>
-                            <span style="color: var(--color-muted); font-family: 'JetBrains Mono', monospace; font-size: 12px;">${p.id.substring(0, 20)}...</span>
-                            <span style="margin-left: auto; font-weight: 600;">Rs.${p.amount.toLocaleString()}</span>
-                            <span class="audit-badge ${p.status === 'captured' ? 'live' : 'sim'}">${p.status}</span>
-                        </div>
-                    `).join('');
-                } else {
-                    auditDiv.innerHTML = '<p style="color: var(--color-muted); font-size: 13px;">No recent transactions. Run <code style="color: var(--color-primary);">python demo_winning.py</code> to generate activity.</p>';
-                }
+                // Audit events count from audit trail
+                document.getElementById('auditEvents').textContent = data.audit.total_events || 0;
 
             } catch (error) {
                 console.error('Failed to fetch stats:', error);
@@ -529,9 +851,222 @@
             }
         }
 
+        // ── Merchant List & AI Analysis ──
+
+        async function fetchMerchants() {
+            try {
+                const response = await fetch('/api/merchants');
+                const data = await response.json();
+                const tbody = document.getElementById('merchantList');
+
+                if (data.merchants && data.merchants.length > 0) {
+                    tbody.innerHTML = data.merchants.slice(0, 20).map(m => `
+                        <tr onclick="analyzeMerchant('${m.merchant_id}')">
+                            <td style="font-weight: 600;">${m.business_name}</td>
+                            <td style="color: var(--color-muted);">${m.category}</td>
+                            <td style="font-family: 'JetBrains Mono', monospace;">Rs.${m.total_revenue.toLocaleString()}</td>
+                            <td>${(m.failure_rate * 100).toFixed(1)}%</td>
+                            <td>${m.days_since_last_transaction}d</td>
+                            <td><span class="risk-badge ${m.risk_level}">${m.risk_level}</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="color: var(--color-muted); text-align: center;">No merchant data. Run demo first.</td></tr>';
+                }
+            } catch (error) {
+                console.error('Failed to fetch merchants:', error);
+            }
+        }
+
+        async function analyzeMerchant(merchantId) {
+            const panel = document.getElementById('analysisPanel');
+            panel.classList.add('active');
+            document.getElementById('analysisName').textContent = 'Analyzing...';
+            document.getElementById('analysisId').textContent = merchantId;
+            document.getElementById('analysisText').innerHTML = '<span class="loading-spinner"></span> Gemini AI is analyzing this merchant...';
+            document.getElementById('riskAssessment').textContent = '--';
+            document.getElementById('recommendations').innerHTML = '<span class="loading-spinner"></span> Generating recommendations...';
+
+            // Scroll to panel
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            try {
+                const response = await fetch(`/api/merchants/${merchantId}/analysis`);
+                const data = await response.json();
+
+                // Update merchant info
+                document.getElementById('analysisName').textContent = data.merchant.business_name;
+                document.getElementById('analysisId').textContent = `${data.merchant.merchant_id} | ${data.merchant.category} | Rs.${data.merchant.total_revenue.toLocaleString()}`;
+
+                // Update AI analysis
+                document.getElementById('analysisText').textContent = data.analysis.analysis || 'Analysis completed';
+
+                // Update risk assessment
+                document.getElementById('riskAssessment').innerHTML = `
+                    <strong>Churn Probability:</strong> ${(data.prediction.churn_probability * 100).toFixed(1)}%<br>
+                    <strong>Risk Level:</strong> <span class="risk-badge ${data.prediction.risk_level}" style="display:inline-block; margin: 4px 0;">${data.prediction.risk_level}</span><br>
+                    <strong>Risk Factors:</strong><br>
+                    ${data.prediction.risk_factors.map(f => `&bull; ${f}`).join('<br>')}
+                `;
+
+                // Update recommendations
+                const recs = data.analysis.recommendations || [];
+                if (recs.length > 0) {
+                    document.getElementById('recommendations').innerHTML = recs.map((r, i) => `
+                        <div class="recommendation-item">
+                            <div class="rec-header">
+                                <span class="rec-type">${i + 1}. [${(r.action_type || '').toUpperCase()}] ${r.title || 'Action'}</span>
+                                <span class="rec-impact">Rs.${(r.expected_impact || 0).toLocaleString()}</span>
+                            </div>
+                            <div class="rec-reasoning">${r.reasoning || r.description || ''}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('recommendations').innerHTML = '<p style="color: var(--color-muted);">No recommendations generated</p>';
+                }
+
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                document.getElementById('analysisText').textContent = 'Analysis failed. Please try again.';
+            }
+        }
+
+        function closeAnalysis() {
+            document.getElementById('analysisPanel').classList.remove('active');
+        }
+
+        // ── Run Live Demo ──
+
+        async function runLiveDemo() {
+            const btn = document.getElementById('runDemoBtn');
+            const panel = document.getElementById('demoPanel');
+            const stepsDiv = document.getElementById('demoSteps');
+            const resultDiv = document.getElementById('demoResult');
+            const spinner = document.getElementById('demoSpinner');
+
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+            panel.classList.add('active');
+            resultDiv.classList.remove('active');
+            stepsDiv.innerHTML = '';
+            spinner.style.display = 'inline-block';
+
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            try {
+                const response = await fetch('/api/run-demo', { method: 'POST' });
+                const data = await response.json();
+
+                if (!data.success) {
+                    stepsDiv.innerHTML = `<p style="color: var(--color-danger);">Error: ${data.error}</p>`;
+                    btn.disabled = false;
+                    btn.textContent = '▶ Run Live Demo';
+                    spinner.style.display = 'none';
+                    return;
+                }
+
+                // Animate each step appearing
+                for (let i = 0; i < data.steps.length; i++) {
+                    await new Promise(r => setTimeout(r, 600));
+                    const s = data.steps[i];
+                    const stepEl = document.createElement('div');
+                    stepEl.className = 'demo-step';
+                    stepEl.innerHTML = `
+                        <div class="step-number ${s.status}">${s.step}</div>
+                        <div class="step-content">
+                            <div class="step-title">${s.title}</div>
+                            <div class="step-detail">${s.detail}</div>
+                            ${s.payment_link ? `<div style="margin-top: 8px;"><a href="${s.payment_link}" target="_blank" style="color: var(--color-primary); font-size: 13px;">${s.payment_link} →</a></div>` : ''}
+                            ${s.amount_recovered ? `<div style="margin-top: 8px; color: var(--color-success); font-weight: 600;">+ Rs.${s.amount_recovered.toLocaleString()} recovered</div>` : ''}
+                            <div class="step-time">${new Date(s.timestamp).toLocaleTimeString()}</div>
+                        </div>
+                    `;
+                    stepsDiv.appendChild(stepEl);
+                    // Trigger animation
+                    requestAnimationFrame(() => stepEl.classList.add('visible'));
+                }
+
+                // Show result
+                await new Promise(r => setTimeout(r, 400));
+                resultDiv.classList.add('active');
+                document.getElementById('demoResultDetail').innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 12px;">
+                        <div>
+                            <div style="color: var(--color-muted); font-size: 12px;">MERCHANT</div>
+                            <div style="font-weight: 600;">${data.merchant.name}</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--color-muted); font-size: 12px;">PAYMENT LINK</div>
+                            <div style="font-weight: 600;"><a href="${data.payment_link}" target="_blank" style="color: var(--color-primary);">${data.payment_link}</a></div>
+                        </div>
+                        <div>
+                            <div style="color: var(--color-muted); font-size: 12px;">REVENUE RECOVERED</div>
+                            <div style="font-weight: 600; color: var(--color-success); font-size: 18px;">Rs.${data.amount_recovered.toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; color: var(--color-muted); font-size: 12px;">Razorpay Mode: ${data.razorpay_mode} | Audit Events: ${data.total_audit_events}</div>
+                `;
+
+                spinner.style.display = 'none';
+                btn.disabled = false;
+                btn.textContent = '▶ Run Live Demo';
+
+                // Show recovery card
+                const recoveryCard = document.getElementById('recoveryCard');
+                recoveryCard.style.display = 'block';
+                document.getElementById('revenueRecovered').textContent = 'Rs.' + data.amount_recovered.toLocaleString();
+
+                // Refresh data
+                fetchStats();
+                fetchAuditTrail();
+                fetchMerchants();
+
+            } catch (error) {
+                stepsDiv.innerHTML = `<p style="color: var(--color-danger);">Demo failed: ${error.message}</p>`;
+                spinner.style.display = 'none';
+                btn.disabled = false;
+                btn.textContent = '▶ Run Live Demo';
+            }
+        }
+
+        // ── Audit Trail ──
+
+        async function fetchAuditTrail() {
+            try {
+                const response = await fetch('/api/audit/recent');
+                const data = await response.json();
+                const div = document.getElementById('auditTrail');
+
+                if (data.events && data.events.length > 0) {
+                    div.innerHTML = data.events.slice(0, 15).map(e => {
+                        const time = new Date(e.timestamp).toLocaleTimeString();
+                        const severityColor = e.severity === 'warning' ? 'var(--color-warning)' : e.severity === 'error' ? 'var(--color-danger)' : 'var(--color-success)';
+                        const icon = e.severity === 'warning' ? '⚠' : e.severity === 'error' ? '✕' : '✓';
+                        return `
+                            <div class="audit-item">
+                                <span class="audit-time">${time}</span>
+                                <span style="color: ${severityColor}; font-weight: 600; min-width: 16px;">${icon}</span>
+                                <span style="font-weight: 500; min-width: 140px;">${e.event_type.replace(/_/g, ' ')}</span>
+                                <span style="color: var(--color-muted); font-size: 12px;">${e.merchant_id}</span>
+                                <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--color-muted);">${e.severity}</span>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    div.innerHTML = '<p style="color: var(--color-muted); font-size: 13px;">No audit events yet. Click <strong>\u25b6 Run Live Demo</strong> to generate activity.</p>';
+                }
+            } catch (error) {
+                console.error('Failed to fetch audit trail:', error);
+            }
+        }
+
         // Fetch on load + auto-refresh every 30s
         fetchStats();
+        fetchMerchants();
+        fetchAuditTrail();
         setInterval(fetchStats, 30000);
+        setInterval(fetchMerchants, 60000);
+        setInterval(fetchAuditTrail, 15000);
     </script>
 </body>
 </html>

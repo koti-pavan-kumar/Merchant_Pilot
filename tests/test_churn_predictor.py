@@ -136,16 +136,16 @@ class TestChurnPredictor:
         new_predictor.load_model(model_file)
         
         # Test prediction with loaded model
-        single_features = self.X.iloc[0].values.reshape(1, -1)
+        new_predictor.feature_names = self.feature_names
+        single_features = self.X.iloc[0:1]  # Keep as DataFrame
         result = new_predictor.predict_single(single_features)
         
         assert 'churn_prediction' in result
         assert 'churn_probability' in result
         
         # Cleanup
-        os.remove(model_file)
-        os.remove(metrics_file)
-        os.rmdir("test_models")
+        import shutil
+        shutil.rmtree("test_models", ignore_errors=True)
     
     def test_model_info(self):
         """Test model info retrieval."""

@@ -148,7 +148,10 @@ class FeatureEngineer:
             
             # Transaction aggregation features
             'transaction_count_90d', 'total_amount_90d', 'avg_amount_90d',
-            'std_amount_90d', 'success_rate_90d', 'failure_count_90d'
+            'std_amount_90d', 'success_rate_90d', 'failure_count_90d',
+            
+            # Confounding features (not directly related to churn — makes ML harder)
+            'business_age_days', 'revenue_growth_rate',
         ]
         
         # Select features that exist in the dataframe

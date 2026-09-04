@@ -168,8 +168,18 @@ class TestAuditTrail:
     """Test suite for audit trail."""
     
     def setup_method(self):
-        """Setup test fixtures."""
-        self.audit_trail = AuditTrail()
+        """Setup test fixtures with a temporary log file."""
+        import tempfile
+        self._tmp_dir = tempfile.mkdtemp()
+        self._tmp_log = os.path.join(self._tmp_dir, 'test_audit.log')
+        # Create a fresh empty file for this test
+        open(self._tmp_log, 'w').close()
+        self.audit_trail = AuditTrail(log_file=self._tmp_log)
+    
+    def teardown_method(self):
+        """Clean up temp files."""
+        import shutil
+        shutil.rmtree(self._tmp_dir, ignore_errors=True)
     
     def test_log_event(self):
         """Test event logging."""
