@@ -966,6 +966,276 @@ async def test_payment_page():
     return HTMLResponse(content=page, status_code=200)
 
 
+# ── Merchant Health Page ──────────────────────────────
+
+@app.get("/merchant/{merchant_id}", response_class=HTMLResponse)
+async def merchant_health_page(merchant_id: str):
+    """Merchant-facing health dashboard page."""
+    # Load merchant data
+    data_dir = Path("data/synthetic")
+    if not (data_dir / "merchants.json").exists():
+        return HTMLResponse(content="<h1>No merchant data found</h1>", status_code=404)
+
+    with open(data_dir / "merchants.json") as f:
+        merchants = json.load(f)
+
+    merchant = None
+    for m in merchants:
+        if m.get("merchant_id") == merchant_id:
+            merchant = m
+            break
+
+    if not merchant:
+        return HTMLResponse(content=f"<h1>Merchant {merchant_id} not found</h1>", status_code=404)
+
+    # Calculate health score (0-100)
+    failure_rate = merchant.get("failure_rate", 0)
+    refund_rate = merchant.get("refund_rate", 0)
+    days_inactive = merchant.get("days_since_last_transaction", 0)
+    chargebacks = merchant.get("chargeback_count", 0)
+    revenue = merchant.get("total_revenue", 0)
+
+    health_score = max(0, min(100, int(
+        100
+        - (failure_rate * 100)
+        - (refund_rate * 80)
+        - (min(days_inactive, 90) / 90 * 40)
+        - (chargebacks * 5)
+    )))
+
+    # Risk level
+    if health_score >= 70:
+        risk_level = "low"
+        risk_color = "#10B981"
+        risk_label = "Healthy"
+    elif health_score >= 50:
+        risk_level = "medium"
+        risk_color = "#F59E0B"
+        risk_label = "At Risk"
+    elif health_score >= 30:
+        risk_level = "high"
+        risk_color = "#EF4444"
+        risk_label = "Critical"
+    else:
+        risk_level = "critical"
+        risk_color = "#DC2626"
+        risk_label = "Churned"
+
+    # Get retry links from audit trail
+    audit = AuditTrail()
+    logs = audit.get_merchant_logs(merchant_id, limit=50)
+    retry_links = []
+    recovered_amount = 0
+    total_actions = 0
+    successful_actions = 0
+
+    for log in logs:
+        if log.event_type in ("recovery_payment_link_created", "payment_link_created"):
+            retry_links.append({
+                "url": log.details.get("short_url", ""),
+                "amount": log.details.get("amount", 0),
+                "time": log.timestamp.strftime("%d %b, %I:%M %p"),
+            })
+        if log.event_type in ("revenue_recovered", "webhook_payment_captured"):
+            recovered_amount += log.details.get("amount", 0)
+        if log.event_type in ("action_start",):
+            total_actions += 1
+        if log.event_type == "action_complete" and log.severity == "info":
+            successful_actions += 1
+
+    # Build the HTML page
+    retry_links_html = ""
+    if retry_links:
+        for rl in retry_links[:5]:
+            retry_links_html += f"""
+            <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="color: #64748B; font-size: 12px;">{rl['time']}</div>
+                    <a href="{rl['url']}" target="_blank" style="color: #F59E0B; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-decoration: none;">{rl['url']}</a>
+                </div>
+                <div style="font-weight: 600; color: #10B981;">Rs.{rl['amount']:,.0f}</div>
+            </div>
+            """
+    else:
+        retry_links_html = '<div style="color: #64748B; padding: 16px 0;">No retry links generated yet. The system will create them when payments fail.</div>'
+
+    success_rate = (successful_actions / total_actions * 100) if total_actions > 0 else 0
+
+    # AI Analysis
+    analyst = LLMMerchantAnalyst()
+    churn_prob = failure_rate * 3 + refund_rate * 2
+    churn_prob = min(churn_prob, 1.0)
+    prediction = {
+        "churn_probability": churn_prob,
+        "risk_level": risk_level,
+        "risk_factors": []
+    }
+    if failure_rate > 0.1:
+        prediction["risk_factors"].append(f"High failure rate ({failure_rate:.1%})")
+    if days_inactive > 30:
+        prediction["risk_factors"].append(f"Inactive {days_inactive} days")
+    if refund_rate > 0.05:
+        prediction["risk_factors"].append(f"High refund rate ({refund_rate:.1%})")
+    if chargebacks > 3:
+        prediction["risk_factors"].append(f"{chargebacks} chargebacks")
+    if not prediction["risk_factors"]:
+        prediction["risk_factors"].append("General health check needed")
+
+    analysis = analyst.analyze_merchant(merchant, prediction)
+    recommendations = analysis.get("recommendations", [])
+
+    recs_html = ""
+    for i, r in enumerate(recommendations[:3]):
+        recs_html += f"""
+        <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 600; color: #F59E0B;">{i+1}. [{r.get('action_type', '').upper()}] {r.get('title', 'Action')}</span>
+                <span style="color: #10B981; font-family: 'JetBrains Mono', monospace;">Rs.{r.get('expected_impact', 0):,}</span>
+            </div>
+            <div style="color: #94A3B8; font-size: 13px; line-height: 1.6;">{r.get('reasoning', r.get('description', ''))[:200]}</div>
+        </div>
+        """
+
+    page = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{merchant['business_name']} - MerchantPilot AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {{ --bg: #0F172A; --card: #1E293B; --border: #334155; --gold: #F59E0B; --green: #10B981; --red: #EF4444; --text: #F8FAFC; --muted: #64748B; }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }}
+        .header {{ background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border-bottom: 1px solid var(--border); padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }}
+        .header h1 {{ font-family: 'Calistoga', serif; color: var(--gold); font-size: 24px; }}
+        .header a {{ color: var(--muted); text-decoration: none; font-size: 14px; }}
+        .header a:hover {{ color: var(--gold); }}
+        .main {{ max-width: 1000px; margin: 0 auto; padding: 32px; }}
+        .health-hero {{ display: grid; grid-template-columns: 200px 1fr; gap: 32px; margin-bottom: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }}
+        .health-score {{ text-align: center; }}
+        .score-circle {{ width: 140px; height: 140px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 4px solid {risk_color}; margin: 0 auto; }}
+        .score-value {{ font-family: 'Calistoga', serif; font-size: 42px; color: {risk_color}; }}
+        .score-label {{ font-size: 12px; color: var(--muted); text-transform: uppercase; }}
+        .risk-badge {{ display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-top: 12px; background: rgba({{'239,68,68' if risk_level in ['critical','high'] else '245,158,11' if risk_level == 'medium' else '16,185,129'}}, 0.15); color: {risk_color}; }}
+        .merchant-info {{ padding: 8px 0; }}
+        .merchant-info h2 {{ font-family: 'Calistoga', serif; font-size: 28px; margin-bottom: 8px; }}
+        .merchant-meta {{ color: var(--muted); font-size: 14px; margin-bottom: 16px; }}
+        .stats-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }}
+        .stat-item {{ background: rgba(15,23,42,0.5); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }}
+        .stat-label {{ color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }}
+        .stat-value {{ font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; margin-top: 4px; }}
+        .section {{ margin-bottom: 24px; }}
+        .section-title {{ font-family: 'Calistoga', serif; font-size: 18px; color: var(--gold); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }}
+        .stat-card {{ background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }}
+        .risk-factors {{ list-style: none; padding: 0; }}
+        .risk-factors li {{ padding: 8px 0; border-bottom: 1px solid rgba(51,65,85,0.3); font-size: 14px; color: #94A3B8; }}
+        .risk-factors li:before {{ content: '• '; color: var(--red); font-weight: 700; }}
+        .back-btn {{ display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 14px; margin-bottom: 24px; }}
+        .back-btn:hover {{ border-color: var(--gold); color: var(--gold); }}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div>
+            <h1>MerchantPilot AI</h1>
+            <p style="color: var(--muted); font-size: 13px;">Merchant Health Dashboard</p>
+        </div>
+        <a href="/dashboard">Back to Dashboard</a>
+    </header>
+    <main class="main">
+        <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+
+        <div class="health-hero">
+            <div class="health-score">
+                <div class="score-circle">
+                    <div class="score-value">{health_score}</div>
+                    <div class="score-label">Health Score</div>
+                </div>
+                <div class="risk-badge">{risk_label}</div>
+            </div>
+            <div class="merchant-info">
+                <h2>{merchant['business_name']}</h2>
+                <div class="merchant-meta">{merchant_id} | {merchant.get('category', 'Unknown')} | Registered {merchant.get('registration_date', 'N/A')[:10]}</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Total Revenue</div>
+                        <div class="stat-value" style="color: var(--gold);">Rs.{revenue:,.0f}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Recovered</div>
+                        <div class="stat-value" style="color: var(--green);">Rs.{recovered_amount:,.0f}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Success Rate</div>
+                        <div class="stat-value">{success_rate:.0f}%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Failure Rate</div>
+                        <div class="stat-value" style="color: {'var(--red)' if failure_rate > 0.1 else 'var(--green)'};">{failure_rate:.1%}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Days Inactive</div>
+                        <div class="stat-value" style="color: {'var(--red)' if days_inactive > 30 else 'var(--green)'};">{days_inactive}d</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Chargebacks</div>
+                        <div class="stat-value" style="color: {'var(--red)' if chargebacks > 3 else 'var(--green)'};">{chargebacks}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Factors -->
+        <div class="section">
+            <div class="section-title">Risk Factors</div>
+            <div class="stat-card">
+                <ul class="risk-factors">
+                    {''.join(f'<li>{f}</li>' for f in prediction['risk_factors'])}
+                </ul>
+            </div>
+        </div>
+
+        <!-- AI Recommendations -->
+        <div class="section">
+            <div class="section-title">AI Recommendations</div>
+            {recs_html}
+        </div>
+
+        <!-- Retry Links -->
+        <div class="section">
+            <div class="section-title">Retry Payment Links</div>
+            {retry_links_html}
+        </div>
+
+        <!-- Recovery Actions -->
+        <div class="section">
+            <div class="section-title">Recovery Actions</div>
+            <div class="stat-card">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">Actions Triggered</div>
+                        <div class="stat-value">{total_actions}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Successful</div>
+                        <div class="stat-value" style="color: var(--green);">{successful_actions}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">AI Provider</div>
+                        <div class="stat-value" style="font-size: 14px;">{analysis.get('model_used', 'rule-based')}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+"""
+    return HTMLResponse(content=page, status_code=200)
+
+
 def _serve_dashboard():
     """Read and return the dashboard HTML file on every request."""
     candidates = [

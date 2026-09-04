@@ -907,13 +907,13 @@
 
                 if (data.merchants && data.merchants.length > 0) {
                     tbody.innerHTML = data.merchants.slice(0, 20).map(m => `
-                        <tr onclick="analyzeMerchant('${m.merchant_id}')">
-                            <td style="font-weight: 600;">${m.business_name}</td>
+                        <tr>
+                            <td style="font-weight: 600; cursor: pointer;" onclick="analyzeMerchant('${m.merchant_id}')">${m.business_name}</td>
                             <td style="color: var(--color-muted);">${m.category}</td>
                             <td style="font-family: 'JetBrains Mono', monospace;">Rs.${m.total_revenue.toLocaleString()}</td>
                             <td>${(m.failure_rate * 100).toFixed(1)}%</td>
                             <td>${m.days_since_last_transaction}d</td>
-                            <td><span class="risk-badge ${m.risk_level}">${m.risk_level}</span></td>
+                            <td style="display: flex; align-items: center; gap: 8px;"><span class="risk-badge ${m.risk_level}">${m.risk_level}</span><a href="/merchant/${m.merchant_id}" target="_blank" onclick="event.stopPropagation()" style="color: var(--color-primary); font-size: 12px; text-decoration: none; white-space: nowrap;">View Health →</a></td>
                         </tr>
                     `).join('');
                 } else {
