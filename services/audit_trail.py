@@ -70,6 +70,20 @@ class AuditTrail:
         # Append to file
         self._write_to_file(log_entry)
         
+        # Publish to SSE subscribers (real-time dashboard updates)
+        try:
+            from main import _publish_sse_event
+            _publish_sse_event("audit_event", {
+                "log_id": log_entry.log_id,
+                "merchant_id": log_entry.merchant_id,
+                "event_type": log_entry.event_type,
+                "details": log_entry.details,
+                "timestamp": log_entry.timestamp.isoformat(),
+                "severity": log_entry.severity,
+            })
+        except (ImportError, Exception):
+            pass  # SSE not available (e.g., during tests)
+        
         return log_entry
     
     def _write_to_file(self, log_entry: AuditLog):

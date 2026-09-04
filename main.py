@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 import uvicorn
 import os
 import json
@@ -641,6 +641,81 @@ async def get_recent_audit():
         "total": len(events),
         "events": events,
     }
+
+
+# ── Server-Sent Events (SSE) for real-time dashboard updates ──────
+
+import asyncio
+import time as _time
+
+# In-memory event queue for SSE subscribers
+_sse_subscribers = []
+_sse_event_id = 0
+
+
+def _publish_sse_event(event_type: str, data: dict):
+    """Publish an event to all SSE subscribers."""
+    global _sse_event_id
+    _sse_event_id += 1
+    event = {
+        "id": _sse_event_id,
+        "event": event_type,
+        "data": json.dumps(data),
+        "timestamp": datetime.now().isoformat(),
+    }
+    # Push to all connected subscribers
+    dead = []
+    for q in _sse_subscribers:
+        try:
+            q.append(event)
+        except Exception:
+            dead.append(q)
+    for d in dead:
+        _sse_subscribers.remove(d)
+
+
+@app.get("/api/events")
+async def sse_events():
+    """
+    Server-Sent Events endpoint.
+    Streams real-time audit events, webhook events, and payment status changes.
+    Dashboard subscribes to this for live updates without polling.
+    """
+    queue = []
+    _sse_subscribers.append(queue)
+
+    async def event_generator():
+        # Send initial connection event
+        yield f"id: 0\nevent: connected\ndata: {json.dumps({'status': 'connected', 'timestamp': datetime.now().isoformat()})}\n\n"
+
+        last_heartbeat = _time.time()
+        try:
+            while True:
+                # Send heartbeat every 15s to keep connection alive
+                if _time.time() - last_heartbeat > 15:
+                    yield f"id: -1\nevent: heartbeat\ndata: {json.dumps({'time': datetime.now().isoformat()})}\n\n"
+                    last_heartbeat = _time.time()
+
+                # Drain queued events
+                while queue:
+                    evt = queue.pop(0)
+                    yield f"id: {evt['id']}\nevent: {evt['event']}\ndata: {evt['data']}\n\n"
+                    last_heartbeat = _time.time()
+
+                await asyncio.sleep(0.5)
+        except asyncio.CancelledError:
+            if queue in _sse_subscribers:
+                _sse_subscribers.remove(queue)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @app.get("/api/recovery/history")

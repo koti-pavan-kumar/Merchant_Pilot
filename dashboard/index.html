@@ -601,6 +601,10 @@
             <p>AI-Powered Merchant Health & Growth Automation</p>
         </div>
         <div class="header-right">
+            <div class="live-badge" title="Real-time event stream">
+                <span id="sseStatus" style="width: 8px; height: 8px; border-radius: 50%; background: var(--color-warning); display: inline-block; margin-right: 6px;"></span>
+                <span>Live</span>
+            </div>
             <div class="live-badge">
                 <span class="live-dot"></span>
                 <span id="apiStatus">Connecting</span>
@@ -1340,8 +1344,68 @@
         fetchRecoveryData();
         setInterval(fetchStats, 30000);
         setInterval(fetchMerchants, 60000);
-        setInterval(fetchAuditTrail, 15000);
         setInterval(fetchRecoveryData, 30000);
+
+        // ── SSE: Real-time event stream ──
+        let sseRetryCount = 0;
+        function connectSSE() {
+            const sse = new EventSource('/api/events');
+
+            sse.addEventListener('connected', (e) => {
+                sseRetryCount = 0;
+                const dot = document.getElementById('sseStatus');
+                if (dot) { dot.style.background = 'var(--color-success)'; dot.title = 'Live: connected'; }
+                console.log('[SSE] Connected');
+            });
+
+            sse.addEventListener('audit_event', (e) => {
+                try {
+                    const event = JSON.parse(e.data);
+                    // Prepend to audit trail
+                    const div = document.getElementById('auditTrail');
+                    const noEvents = div.querySelector('p');
+                    if (noEvents) div.innerHTML = '';
+
+                    const time = new Date(event.timestamp).toLocaleTimeString();
+                    const severityColor = event.severity === 'warning' ? 'var(--color-warning)' : event.severity === 'error' ? 'var(--color-danger)' : 'var(--color-success)';
+                    const icon = event.severity === 'warning' ? '\u26a0' : event.severity === 'error' ? '\u2717' : '\u2713';
+                    const item = document.createElement('div');
+                    item.className = 'audit-item';
+                    item.style.animation = 'fadeIn 0.3s ease';
+                    item.innerHTML = `
+                        <span class="audit-time">${time}</span>
+                        <span style="color: ${severityColor}; font-weight: 600; min-width: 16px;">${icon}</span>
+                        <span style="font-weight: 500; min-width: 140px;">${event.event_type.replace(/_/g, ' ')}</span>
+                        <span style="color: var(--color-muted); font-size: 12px;">${event.merchant_id}</span>
+                        <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--color-muted);">${event.severity}</span>
+                    `;
+                    div.insertBefore(item, div.firstChild);
+
+                    // Keep max 20 items
+                    while (div.children.length > 20) div.removeChild(div.lastChild);
+
+                    // Refresh stats
+                    fetchStats();
+                    fetchRecoveryData();
+                } catch(err) { console.error('[SSE] Parse error:', err); }
+            });
+
+            sse.addEventListener('heartbeat', () => {});
+
+            sse.onerror = () => {
+                const dot = document.getElementById('sseStatus');
+                if (dot) { dot.style.background = 'var(--color-warning)'; dot.title = 'Reconnecting...'; }
+                sse.close();
+                sseRetryCount++;
+                const delay = Math.min(1000 * Math.pow(2, sseRetryCount), 30000);
+                console.log(`[SSE] Reconnecting in ${delay}ms...`);
+                setTimeout(connectSSE, delay);
+            };
+        }
+        connectSSE();
     </script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </body>
 </html>
